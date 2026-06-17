@@ -41,7 +41,6 @@ select option{background:#1c1c1c;}
 .alert-card.red{background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);}
 .alert-card.orange{background:rgba(255,152,0,.1);border:1px solid rgba(255,152,0,.3);}
 .alert-card.green{background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);}
-.alert-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
 .alert-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#fff;}
 .alert-desc{font-size:11px;color:var(--muted);margin-top:2px;}
 .big-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;}
@@ -72,7 +71,7 @@ select option{background:#1c1c1c;}
 .trend-val{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);width:40px;text-align:right;flex-shrink:0;}
 .freezer-row{display:flex;gap:5px;align-items:flex-end;margin-bottom:6px;}
 .save-msg{background:var(--green);color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;display:none;text-align:center;margin-bottom:8px;}
-.err-msg{background:var(--red);color:#fff;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:600;display:none;text-align:center;margin-bottom:8px;}
+.err-msg{background:#333;color:#aaa;border-radius:6px;padding:8px 14px;font-size:11px;display:none;text-align:center;margin-bottom:8px;}
 .add-row-btn{width:100%;background:transparent;border:1px dashed var(--gold-b);border-radius:7px;color:var(--muted);font-size:11px;padding:7px;cursor:pointer;margin-bottom:8px;}
 .qty-big{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);text-align:center;padding:6px 4px;width:65px;flex-shrink:0;}
 .unit-sm{font-size:11px;padding:7px 4px;width:60px;flex-shrink:0;}
@@ -102,14 +101,11 @@ select option{background:#1c1c1c;}
 .empty{text-align:center;padding:30px 20px;color:var(--muted);font-size:12px;}
 .period-row{display:flex;gap:6px;margin-bottom:12px;}
 .sync-bar{display:flex;align-items:center;justify-content:space-between;background:rgba(255,199,44,.05);border:1px solid var(--gold-b);border-radius:7px;padding:7px 12px;margin-bottom:12px;font-size:10px;color:var(--muted);}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
-.sync-dot.red{background:var(--red);}
-.sync-dot.orange{background:var(--orange);animation:pulse 1.2s infinite;}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;background:var(--orange);}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.pulsing{animation:pulse 1.2s infinite;}
 .cod-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
 .cod-badge{font-family:'Bebas Neue',sans-serif;font-size:11px;color:var(--gold);background:rgba(255,199,44,.1);border:1px solid var(--gold-b);border-radius:4px;padding:2px 7px;min-width:46px;text-align:center;flex-shrink:0;}
-.cod-name{font-size:11px;color:#ddd;flex:1;}
-.cod-meta{font-size:9px;color:var(--muted);}
 .ley-cat{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:10px 0 5px;}
 </style>
 </head>
@@ -130,9 +126,9 @@ select option{background:#1c1c1c;}
   </div>
 
   <div class="subtab-content active" id="enc-carga">
-    <div class="sync-bar" id="syncBarEnc">
-      <span><span class="sync-dot orange" id="syncDotEnc"></span><span id="syncTxtEnc">Conectando...</span></span>
-      <button class="btn-sm" onclick="syncNow()">↻ Sincronizar</button>
+    <div class="sync-bar">
+      <span><span class="sync-dot pulsing" id="syncDot"></span><span id="syncTxt">Conectando...</span></span>
+      <button class="btn-sm" onclick="loadFromCloud()">↻ Sync</button>
     </div>
     <div class="panel">
       <div class="row2">
@@ -163,32 +159,30 @@ select option{background:#1c1c1c;}
       <button class="add-row-btn" onclick="addRow('inv3Rows')">+ Agregar</button>
     </div>
     <div class="save-msg" id="saveMsg">✓ Guardado y sincronizado</div>
-    <div class="err-msg" id="errMsg">✗ Error al guardar. Verificá la conexión.</div>
+    <div class="err-msg" id="errMsg"></div>
     <button class="btn-p" id="btnGuardar" onclick="guardar()">▶ GUARDAR REPORTE</button>
   </div>
 
   <div class="subtab-content" id="enc-png">
     <div class="fg" style="margin-bottom:12px;">
       <label>Seleccioná el reporte</label>
-      <select id="pngReporteSelect" onchange="renderPNGPreview()"></select>
+      <select id="pngSelect" onchange="renderPNGPreview()"></select>
     </div>
     <div id="pngPreview"></div>
-    <div style="background:rgba(255,199,44,.07);border:1px solid var(--gold-b);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);margin-bottom:8px;">
-      📱 <strong style="color:var(--gold);">Cómo enviar por WhatsApp:</strong><br>
-      Celular: mantené presionado el reporte → Guardar imagen → enviá desde WA.<br>
-      Compu: clic derecho sobre el reporte → Imprimir → Guardar como PDF.
+    <div style="background:rgba(255,199,44,.07);border:1px solid var(--gold-b);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--muted);">
+      📱 <strong style="color:var(--gold);">Enviar por WhatsApp:</strong><br>
+      Cel: mantené presionado el reporte → Guardar imagen → WA.<br>
+      Compu: clic derecho → Imprimir → Guardar como PDF.
     </div>
   </div>
 
   <div class="subtab-content" id="enc-hist">
-    <div style="display:flex;gap:6px;margin-bottom:12px;">
-      <select id="hFiltroTipo" style="flex:1;font-size:12px;" onchange="renderHist()">
-        <option value="">Todos</option>
-        <option value="produccion">Producción</option>
-        <option value="inventario">Inventario</option>
-        <option value="ambos">Ambos</option>
-      </select>
-    </div>
+    <select id="hFiltro" style="margin-bottom:12px;font-size:12px;" onchange="renderHist()">
+      <option value="">Todos</option>
+      <option value="produccion">Producción</option>
+      <option value="inventario">Inventario</option>
+      <option value="ambos">Ambos</option>
+    </select>
     <div id="histCards"></div>
   </div>
 
@@ -212,7 +206,7 @@ select option{background:#1c1c1c;}
       <div class="fg"><label>Unds por pack</label><input type="number" id="nUnds" placeholder="0" min="0"></div>
       <button class="btn-s" onclick="agregarCod()" style="margin-top:4px;">+ AGREGAR</button>
     </div>
-    <button class="btn-sm" onclick="resetAll()" style="width:100%;color:var(--red);border-color:rgba(239,83,80,.3);margin-top:4px;">🗑 Borrar historial local</button>
+    <button class="btn-sm" onclick="resetAll()" style="width:100%;color:var(--red);border-color:rgba(239,83,80,.3);margin-top:4px;">🗑 Borrar historial</button>
   </div>
 </div>
 
@@ -226,7 +220,7 @@ select option{background:#1c1c1c;}
 
   <div class="subtab-content active" id="dir-resumen">
     <div class="sync-bar">
-      <span><span class="sync-dot orange" id="syncDotDir"></span><span id="syncTxtDir">Cargando datos...</span></span>
+      <span><span class="sync-dot pulsing" id="syncDotDir"></span><span id="syncTxtDir">Cargando...</span></span>
       <button class="btn-sm" onclick="loadFromCloud()">↻ Actualizar</button>
     </div>
     <div class="kpi-grid" id="dirKPIs"></div>
@@ -240,9 +234,7 @@ select option{background:#1c1c1c;}
   </div>
 
   <div class="subtab-content" id="dir-alertas">
-    <div style="text-align:right;margin-bottom:10px;">
-      <button class="btn-sm" onclick="loadFromCloud()">↻ Actualizar</button>
-    </div>
+    <div style="text-align:right;margin-bottom:10px;"><button class="btn-sm" onclick="loadFromCloud()">↻ Actualizar</button></div>
     <div id="dirAlertas"></div>
   </div>
 
@@ -260,7 +252,6 @@ select option{background:#1c1c1c;}
 var API = 'https://script.google.com/macros/s/AKfycbwCZaM0VXpUp-4RX0lCH8gsAl26nqdSnL6lNQaTnGn4gSTdBlQEDo4vm2OF8gG_rfo/exec';
 var CATS = ['TEQUEÑOS','PASTELITOS','MINI EMPANADAS','POSTRES','CACHITOS','BEBIDAS','SALSAS'];
 var CAT_ICONS = {TEQUEÑOS:'🧀',PASTELITOS:'🫓','MINI EMPANADAS':'🥟',POSTRES:'🍫',CACHITOS:'🥐',BEBIDAS:'🍺',SALSAS:'🫙'};
-
 var DEFAULT_CODIGOS = [
   {cod:'TO',  nombre:'Tequeño Original',       cat:'TEQUEÑOS',      unit:'Doc.',  undsXpack:12},
   {cod:'TF',  nombre:'Tequeño Fiestero',        cat:'TEQUEÑOS',      unit:'Pack',  undsXpack:25},
@@ -285,100 +276,100 @@ var DEFAULT_CODIGOS = [
   {cod:'CACH', nombre:'Cachitos',                cat:'CACHITOS',      unit:'Unid.', undsXpack:0},
 ];
 
-var cloudData = {};
-var rowCount = 0;
-var curPer = 'semana';
+var rowCount=0, curPer='semana';
 
 function getCods(){try{return JSON.parse(localStorage.getItem('to_cods_v3')||'null')||DEFAULT_CODIGOS;}catch(e){return DEFAULT_CODIGOS;}}
 function saveCods(c){localStorage.setItem('to_cods_v3',JSON.stringify(c));}
-function getReps(){
-  if(cloudData.reportes) return cloudData.reportes;
-  try{return JSON.parse(localStorage.getItem('to_reps_v3')||'[]');}catch(e){return[];}
-}
+function getReps(){try{return JSON.parse(localStorage.getItem('to_reps_v3')||'[]');}catch(e){return[];}}
+function saveRepsLocal(r){localStorage.setItem('to_reps_v3',JSON.stringify(r));}
 function codInfo(c){return getCods().find(x=>x.cod===c)||{cod:c,nombre:c,cat:'?',unit:'Unid.',undsXpack:0};}
 function today(){return new Date().toISOString().split('T')[0];}
 function fmtD(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 
-function setSyncStatus(el_dot, el_txt, status, txt){
-  var dot = document.getElementById(el_dot);
-  var label = document.getElementById(el_txt);
-  if(!dot||!label) return;
-  dot.className = 'sync-dot ' + (status==='ok'?'':'status'==='err'?'red':'orange');
-  if(status==='ok') dot.style.background='var(--green)';
-  if(status==='err') dot.style.background='var(--red)';
-  if(status==='loading') dot.style.background='var(--orange)';
-  label.textContent = txt;
+function setSyncOk(txt){
+  ['syncDot','syncDotDir'].forEach(id=>{var d=document.getElementById(id);if(d){d.style.background='var(--green)';d.classList.remove('pulsing');}});
+  ['syncTxt','syncTxtDir'].forEach(id=>{var d=document.getElementById(id);if(d)d.textContent=txt;});
+}
+function setSyncErr(txt){
+  ['syncDot','syncDotDir'].forEach(id=>{var d=document.getElementById(id);if(d){d.style.background='var(--red)';d.classList.remove('pulsing');}});
+  ['syncTxt','syncTxtDir'].forEach(id=>{var d=document.getElementById(id);if(d)d.textContent=txt;});
+}
+function setSyncLoading(){
+  ['syncDot','syncDotDir'].forEach(id=>{var d=document.getElementById(id);if(d){d.style.background='var(--orange)';d.classList.add('pulsing');}});
+  ['syncTxt','syncTxtDir'].forEach(id=>{var d=document.getElementById(id);if(d)d.textContent='Sincronizando...';});
 }
 
-async function loadFromCloud(){
-  setSyncStatus('syncDotDir','syncTxtDir','loading','Actualizando...');
-  setSyncStatus('syncDotEnc','syncTxtEnc','loading','Sincronizando...');
-  try {
-    var res = await fetch(API + '?t=' + Date.now());
-    var data = await res.json();
-    cloudData = data;
-    if(data.reportes) {
-      localStorage.setItem('to_reps_v3', JSON.stringify(data.reportes));
+// JSONP para evitar CORS
+function loadFromCloud(){
+  setSyncLoading();
+  var script = document.createElement('script');
+  var cb = 'cb_' + Date.now();
+  window[cb] = function(data){
+    delete window[cb];
+    document.getElementById('jsonp-script') && document.getElementById('jsonp-script').remove();
+    if(data && data.reportes){
+      saveRepsLocal(data.reportes);
     }
     var now = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus('syncDotDir','syncTxtDir','ok','Actualizado ' + now);
-    setSyncStatus('syncDotEnc','syncTxtEnc','ok','Sincronizado ' + now);
-    if(document.getElementById('dir-resumen').classList.contains('active')) renderDirResumen();
-    if(document.getElementById('dir-alertas').classList.contains('active')) renderDirAlertas();
-    if(document.getElementById('dir-stats').classList.contains('active')) renderDirStats();
-  } catch(e) {
-    setSyncStatus('syncDotDir','syncTxtDir','err','Sin conexión');
-    setSyncStatus('syncDotEnc','syncTxtEnc','err','Sin conexión — datos locales');
-  }
+    setSyncOk('Actualizado ' + now);
+    refreshDir();
+  };
+  script.onerror = function(){
+    delete window[cb];
+    setSyncErr('Sin conexión — datos locales');
+  };
+  script.id = 'jsonp-script';
+  script.src = API + '?callback=' + cb + '&t=' + Date.now();
+  document.head.appendChild(script);
 }
 
-async function saveToCloud(reps){
-  try {
-    await fetch(API, {
-      method:'POST',
-      body: JSON.stringify({key:'reportes', value: reps}),
-      headers:{'Content-Type':'application/json'}
-    });
-    cloudData.reportes = reps;
-    return true;
-  } catch(e) {
-    return false;
-  }
+function saveToCloud(reps){
+  // Usamos un form POST via fetch con mode no-cors, y también guardamos local
+  // Para leer usamos JSONP (GET), para escribir usamos fetch no-cors
+  saveRepsLocal(reps);
+  var payload = JSON.stringify({key:'reportes', value: reps});
+  fetch(API, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'text/plain'},
+    body: payload
+  }).then(function(){
+    var now = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    setSyncOk('Guardado ' + now);
+  }).catch(function(){
+    setSyncErr('Guardado local (sin nube)');
+  });
 }
-
-function syncNow(){ loadFromCloud(); }
 
 function setMode(m){
   document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===(m==='encargado'?0:1)));
   document.getElementById('sc-encargado').classList.toggle('active',m==='encargado');
   document.getElementById('sc-director').classList.toggle('active',m==='director');
-  if(m==='director'){loadFromCloud();}
+  if(m==='director') loadFromCloud();
 }
 
-function setTab(prefix, id){
-  var screen = document.getElementById('sc-'+prefix);
+function setTab(prefix,id){
+  var screen=document.getElementById('sc-'+prefix);
   screen.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   screen.querySelectorAll('.subtab-content').forEach(c=>c.classList.remove('active'));
-  var encTabs = ['carga','png','hist','cfg'];
-  var dirTabs = ['resumen','alertas','stats'];
-  var arr = prefix==='enc'?encTabs:dirTabs;
-  var idx = arr.indexOf(id);
+  var arr=prefix==='enc'?['carga','png','hist','cfg']:['resumen','alertas','stats'];
+  var idx=arr.indexOf(id);
   if(idx>=0) screen.querySelectorAll('.tab')[idx].classList.add('active');
-  var el = document.getElementById(prefix+'-'+id);
+  var el=document.getElementById(prefix+'-'+id);
   if(el) el.classList.add('active');
   if(prefix+'-'+id==='enc-png') renderPNGSelect();
   if(prefix+'-'+id==='enc-hist') renderHist();
   if(prefix+'-'+id==='enc-cfg') renderLeyenda();
-  if(prefix+'-'+id==='dir-resumen') renderDirResumen();
+  if(prefix+'-'+id==='dir-resumen'){loadFromCloud();renderDirResumen();}
   if(prefix+'-'+id==='dir-alertas') renderDirAlertas();
   if(prefix+'-'+id==='dir-stats') renderDirStats();
 }
 
 function makeRow(){
-  var cods = getCods();
-  var opts = cods.map(c=>`<option value="${c.cod}">${c.cod} — ${c.nombre}</option>`).join('');
-  var uOpts = ['Doc.','Pack','Unid.'].map(u=>`<option>${u}</option>`).join('');
-  var id = ++rowCount;
+  var cods=getCods();
+  var opts=cods.map(c=>`<option value="${c.cod}">${c.cod} — ${c.nombre}</option>`).join('');
+  var uOpts=['Doc.','Pack','Unid.'].map(u=>`<option>${u}</option>`).join('');
+  var id=++rowCount;
   return `<div class="freezer-row" id="row_${id}">
     <div style="flex:2;min-width:0;"><select class="prod-sel" onchange="onCodSel(this,${id})">${opts}</select></div>
     <input type="number" class="qty-big" id="qty_${id}" placeholder="0" min="0" oninput="updHint(${id})">
@@ -412,103 +403,69 @@ function getRows(cid){
   });
   return rows;
 }
-
-async function guardar(){
+function guardar(){
   var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}
   var tipo=document.getElementById('eTipo').value;
   var rep={fecha,tipo,ts:new Date().toISOString()};
   if(tipo==='produccion'||tipo==='ambos') rep.produccion=getRows('prodRows');
   if(tipo==='inventario'||tipo==='ambos') rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};
-
-  var btn = document.getElementById('btnGuardar');
-  btn.disabled=true; btn.textContent='Guardando...';
-
-  var reps = getReps();
-  var idx = reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);
+  var btn=document.getElementById('btnGuardar');
+  btn.disabled=true;btn.textContent='Guardando...';
+  var reps=getReps();
+  var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);
   if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?')){btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';return;}reps[idx]=rep;}
   else reps.unshift(rep);
-
-  localStorage.setItem('to_reps_v3', JSON.stringify(reps));
-  var ok = await saveToCloud(reps);
-
-  btn.disabled=false; btn.textContent='▶ GUARDAR REPORTE';
-  var sm=document.getElementById('saveMsg');
-  var em=document.getElementById('errMsg');
-  if(ok){sm.textContent='✓ Guardado y sincronizado con Google Sheets';sm.style.display='block';setTimeout(()=>sm.style.display='none',3000);}
-  else{em.textContent='⚠ Guardado localmente (sin conexión a la nube)';em.style.display='block';setTimeout(()=>em.style.display='none',4000);}
+  saveToCloud(reps);
+  btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';
+  var sm=document.getElementById('saveMsg');sm.style.display='block';setTimeout(()=>sm.style.display='none',3000);
 }
 
 function renderPNGSelect(){
   var reps=getReps();
-  var sel=document.getElementById('pngReporteSelect');
+  var sel=document.getElementById('pngSelect');
   sel.innerHTML=reps.length?reps.map((r,i)=>`<option value="${i}">${fmtD(r.fecha)} — ${{produccion:'Producción',inventario:'Inventario',ambos:'Prod+Inv'}[r.tipo]||r.tipo}</option>`).join(''):'<option>Sin reportes</option>';
   renderPNGPreview();
 }
 function renderPNGPreview(){
-  var reps=getReps();
-  var idx=parseInt(document.getElementById('pngReporteSelect').value)||0;
-  var rep=reps[idx];
-  var el=document.getElementById('pngPreview');
-  if(!rep){el.innerHTML='<div class="empty">Sin datos</div>';return;}
-  var html=`<div class="png-preview">
-    <div class="png-header"><span class="png-title">🧀 TEQUE ONDA</span><span class="png-date">${fmtD(rep.fecha)}</span></div>`;
+  var reps=getReps();var idx=parseInt(document.getElementById('pngSelect').value)||0;var rep=reps[idx];
+  var el=document.getElementById('pngPreview');if(!rep){el.innerHTML='<div class="empty">Sin datos</div>';return;}
+  var html=`<div class="png-preview"><div class="png-header"><span class="png-title">🧀 TEQUE ONDA</span><span class="png-date">${fmtD(rep.fecha)}</span></div>`;
   if(rep.produccion&&rep.produccion.length){
-    html+=`<div style="margin-bottom:10px;"><div class="png-sec-title">⚡ PRODUCCIÓN DEL DÍA</div>`;
+    html+=`<div style="margin-bottom:10px;"><div class="png-sec-title">⚡ PRODUCCIÓN</div>`;
     rep.produccion.forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${x.qty*ci.undsXpack} unds`:'';html+=`<div class="png-prod-row"><div><span class="png-cod">${x.cod}</span><span class="png-name">${ci.nombre}</span></div><div><span class="png-qty">${x.qty}</span><span class="png-unit"> ${x.unit}${u}</span></div></div>`;});
     html+='</div>';
   }
-  if(rep.inventario){
-    [1,2,3].forEach(f=>{
-      var items=rep.inventario[f]||[];if(!items.length)return;
-      html+=`<div style="margin-bottom:10px;"><div class="png-sec-title">🧊 FREEZER ${f}</div>`;
-      var bycat={};items.forEach(x=>{var c=codInfo(x.cod).cat;if(!bycat[c])bycat[c]=[];bycat[c].push(x);});
-      CATS.forEach(cat=>{if(!bycat[cat])return;bycat[cat].forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${x.qty*ci.undsXpack} u`:'';html+=`<div class="png-prod-row"><div><span class="png-cod">${x.cod}</span><span class="png-name">${ci.nombre}</span></div><div><span class="png-qty">${x.qty}</span><span class="png-unit"> ${ci.unit}${u}</span></div></div>`;});});
-      html+='</div>';
-    });
-  }
+  if(rep.inventario){[1,2,3].forEach(f=>{var items=rep.inventario[f]||[];if(!items.length)return;html+=`<div style="margin-bottom:10px;"><div class="png-sec-title">🧊 FREEZER ${f}</div>`;items.forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${x.qty*ci.undsXpack} u`:'';html+=`<div class="png-prod-row"><div><span class="png-cod">${x.cod}</span><span class="png-name">${ci.nombre}</span></div><div><span class="png-qty">${x.qty}</span><span class="png-unit"> ${ci.unit}${u}</span></div></div>`;});html+='</div>';});}
   html+=`<div class="png-footer"><span>Teque Onda · Fábrica Constitución</span><span>tequeonda.com.ar</span></div></div>`;
   el.innerHTML=html;
 }
 
 function renderHist(){
-  var reps=getReps();
-  var ft=document.getElementById('hFiltroTipo').value;
-  if(ft)reps=reps.filter(r=>r.tipo===ft);
-  var el=document.getElementById('histCards');
-  if(!reps.length){el.innerHTML='<div class="empty">Sin registros.</div>';return;}
+  var reps=getReps();var ft=document.getElementById('hFiltro').value;if(ft)reps=reps.filter(r=>r.tipo===ft);
+  var el=document.getElementById('histCards');if(!reps.length){el.innerHTML='<div class="empty">Sin registros.</div>';return;}
   el.innerHTML=reps.map(r=>{
     var chips='';
     if(r.produccion)chips+=r.produccion.map(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` (${x.qty*ci.undsXpack}u)`:'';return`<span class="hist-chip">${x.cod} ${x.qty}${u}</span>`;}).join('');
     if(r.inventario)[1,2,3].forEach(f=>{if(r.inventario[f]&&r.inventario[f].length)chips+=`<span class="hist-chip" style="color:var(--gold)">F${f}: ${r.inventario[f].map(x=>x.cod+' '+x.qty).join(', ')}</span>`;});
-    var tipoLabel={produccion:'Producción',inventario:'Inventario',ambos:'Prod+Inv'}[r.tipo]||r.tipo;
-    return`<div class="hist-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><div><div class="hist-fecha">${fmtD(r.fecha)}</div><div class="hist-tipo">${tipoLabel}</div></div><button class="del-btn" onclick="delRep('${r.fecha}','${r.tipo}')">🗑</button></div><div class="hist-chips">${chips}</div></div>`;
+    return`<div class="hist-card"><div style="display:flex;justify-content:space-between;"><div><div class="hist-fecha">${fmtD(r.fecha)}</div><div class="hist-tipo">${{produccion:'Producción',inventario:'Inventario',ambos:'Prod+Inv'}[r.tipo]||r.tipo}</div></div><button class="del-btn" onclick="delRep('${r.fecha}','${r.tipo}')">🗑</button></div><div class="hist-chips">${chips}</div></div>`;
   }).join('');
 }
-async function delRep(fecha,tipo){
-  if(!confirm('¿Eliminar?'))return;
-  var reps=getReps().filter(r=>!(r.fecha===fecha&&r.tipo===tipo));
-  localStorage.setItem('to_reps_v3',JSON.stringify(reps));
-  await saveToCloud(reps);
-  cloudData.reportes=reps;
-  renderHist();
-}
+function delRep(fecha,tipo){if(!confirm('¿Eliminar?'))return;var reps=getReps().filter(r=>!(r.fecha===fecha&&r.tipo===tipo));saveToCloud(reps);renderHist();}
 
 function renderLeyenda(){
   var cods=getCods();var bycat={};cods.forEach(c=>{if(!bycat[c.cat])bycat[c.cat]=[];bycat[c.cat].push(c);});
-  var html='';
-  CATS.forEach(cat=>{if(!bycat[cat])return;html+=`<div class="ley-cat">${CAT_ICONS[cat]||''} ${cat}</div>`;bycat[cat].forEach(c=>{html+=`<div class="cod-row"><span class="cod-badge">${c.cod}</span><div style="flex:1"><div class="cod-name">${c.nombre}</div><div class="cod-meta">${c.unit}${c.undsXpack?' · '+c.undsXpack+' unds/'+c.unit:''}</div></div><button onclick="delCod('${c.cod}')" style="background:none;border:none;color:#333;cursor:pointer;font-size:12px;">✕</button></div>`;});});
+  var html='';CATS.forEach(cat=>{if(!bycat[cat])return;html+=`<div class="ley-cat">${CAT_ICONS[cat]||''} ${cat}</div>`;bycat[cat].forEach(c=>{html+=`<div class="cod-row"><span class="cod-badge">${c.cod}</span><div style="flex:1"><div style="font-size:11px;color:#ddd;">${c.nombre}</div><div style="font-size:9px;color:var(--muted);">${c.unit}${c.undsXpack?' · '+c.undsXpack+' unds/'+c.unit:''}</div></div><button onclick="delCod('${c.cod}')" style="background:none;border:none;color:#333;cursor:pointer;font-size:12px;">✕</button></div>`;});});
   document.getElementById('leyendaPanel').innerHTML=html;
 }
 function agregarCod(){
-  var cod=document.getElementById('nCod').value.trim().toUpperCase();
-  var nombre=document.getElementById('nNombre').value.trim();
+  var cod=document.getElementById('nCod').value.trim().toUpperCase();var nombre=document.getElementById('nNombre').value.trim();
   if(!cod||!nombre){alert('Completá código y nombre');return;}
   var cods=getCods();if(cods.find(c=>c.cod===cod)){alert('Ya existe');return;}
   cods.push({cod,nombre,cat:document.getElementById('nCat').value,unit:document.getElementById('nUnit').value,undsXpack:parseInt(document.getElementById('nUnds').value)||0});
   saveCods(cods);document.getElementById('nCod').value='';document.getElementById('nNombre').value='';document.getElementById('nUnds').value='';renderLeyenda();
 }
 function delCod(cod){if(!confirm('¿Eliminar '+cod+'?'))return;saveCods(getCods().filter(c=>c.cod!==cod));renderLeyenda();}
-function resetAll(){if(confirm('¿Borrar TODO?')){localStorage.removeItem('to_reps_v3');cloudData={};renderDirResumen();}}
+function resetAll(){if(confirm('¿Borrar TODO?')){localStorage.removeItem('to_reps_v3');renderDirResumen();}}
 
 function getStock(){
   var reps=getReps().filter(r=>r.tipo==='inventario'||r.tipo==='ambos').sort((a,b)=>b.fecha.localeCompare(a.fecha));
@@ -518,12 +475,10 @@ function getStock(){
 }
 function getProdToday(){
   var t=today();var reps=getReps().filter(r=>r.fecha===t&&(r.tipo==='produccion'||r.tipo==='ambos'));
-  var agg={};reps.forEach(r=>(r.produccion||[]).forEach(x=>{if(!agg[x.cod])agg[x.cod]=0;agg[x.cod]+=x.qty;}));
-  return agg;
+  var agg={};reps.forEach(r=>(r.produccion||[]).forEach(x=>{if(!agg[x.cod])agg[x.cod]=0;agg[x.cod]+=x.qty;}));return agg;
 }
 function getProdFiltered(per){
-  var now=new Date();now.setHours(0,0,0,0);
-  var from=new Date(0);
+  var now=new Date();now.setHours(0,0,0,0);var from=new Date(0);
   if(per==='semana'){from=new Date(now);from.setDate(now.getDate()-now.getDay());}
   if(per==='mes'){from=new Date(now.getFullYear(),now.getMonth(),1);}
   var reps=getReps().filter(r=>{var d=new Date(r.fecha+'T12:00:00');return d>=from&&(r.tipo==='produccion'||r.tipo==='ambos')&&r.produccion&&r.produccion.length;});
@@ -531,9 +486,14 @@ function getProdFiltered(per){
   return{agg,nDias:reps.length,reps};
 }
 
+function refreshDir(){
+  if(document.getElementById('dir-resumen').classList.contains('active')) renderDirResumen();
+  if(document.getElementById('dir-alertas').classList.contains('active')) renderDirAlertas();
+  if(document.getElementById('dir-stats').classList.contains('active')) renderDirStats();
+}
+
 function renderDirResumen(){
-  var {stock,last}=getStock();
-  var todayProd=getProdToday();
+  var {stock,last}=getStock();var todayProd=getProdToday();
   document.getElementById('dirUltimo').textContent=last?fmtD(last.fecha):'Sin datos';
   var totalUnids=Object.values(stock).reduce((s,v)=>s+v.total,0);
   var nProds=Object.keys(stock).filter(k=>stock[k].total>0).length;
@@ -541,14 +501,12 @@ function renderDirResumen(){
   document.getElementById('dirKPIs').innerHTML=`
     <div class="kpi"><div class="kpi-val">${totalUnids.toLocaleString('es-AR')}</div><div class="kpi-lbl">En stock total</div><div class="kpi-sub">${nProds} productos</div></div>
     <div class="kpi"><div class="kpi-val">${prodHoy||'—'}</div><div class="kpi-lbl">Producido hoy</div><div class="kpi-sub">${Object.keys(todayProd).length} productos</div></div>`;
-  var cods=getCods();
-  var allCods=CATS.flatMap(cat=>cods.filter(c=>c.cat===cat&&stock[c.cod]));
+  var cods=getCods();var allCods=CATS.flatMap(cat=>cods.filter(c=>c.cat===cat&&stock[c.cod]));
   var thead='<thead><tr><th style="width:42%">Producto</th><th>F1</th><th>F2</th><th>F3</th><th>Total</th></tr></thead><tbody>';
   var tbody='';var prevCat='';
   allCods.forEach(c=>{
     if(c.cat!==prevCat){tbody+=`<tr><td colspan="5" style="font-size:9px;color:var(--gold);padding:8px 3px 3px;letter-spacing:2px;">${CAT_ICONS[c.cat]||''} ${c.cat}</td></tr>`;prevCat=c.cat;}
-    var s=stock[c.cod];
-    var tdc=k=>`<td class="${s['f'+k]?'':'zero'}">${s['f'+k]||'—'}</td>`;
+    var s=stock[c.cod];var tdc=k=>`<td class="${s['f'+k]?'':'zero'}">${s['f'+k]||'—'}</td>`;
     var u=c.undsXpack?`<span class="punds">${c.undsXpack}u/${c.unit}</span>`:'';
     tbody+=`<tr><td><span class="pcod">${c.cod}</span><span class="pname">${c.nombre}</span>${u}</td>${tdc(1)}${tdc(2)}${tdc(3)}<td>${s.total}</td></tr>`;
   });
@@ -558,51 +516,34 @@ function renderDirResumen(){
   if(!Object.keys(todayProd).length){hoyEl.innerHTML='<div class="empty">Sin producción cargada hoy.</div>';return;}
   hoyEl.innerHTML=Object.entries(todayProd).map(([cod,qty])=>{var ci=codInfo(cod);var u=ci.undsXpack?` = ${qty*ci.undsXpack} unds`:'';return`<div class="prod-total-chip"><div><span class="ptc-cod">${cod}</span><span class="ptc-name">${ci.nombre}</span></div><span class="ptc-right">${qty} ${ci.unit}${u}</span></div>`;}).join('');
 }
-
 function renderDirAlertas(){
-  var {stock,last}=getStock();
-  var {agg,nDias}=getProdFiltered('mes');
-  var cods=getCods();var alertas=[];
+  var {stock,last}=getStock();var {agg,nDias}=getProdFiltered('mes');var cods=getCods();var alertas=[];
   if(!last){document.getElementById('dirAlertas').innerHTML='<div class="empty">Sin inventario cargado aún.</div>';return;}
   cods.forEach(c=>{
     var s=stock[c.cod];if(!s)return;
-    var prodMes=agg[c.cod]||0;
-    var avgDia=nDias>0?prodMes/nDias:0;
+    var avgDia=nDias>0?(agg[c.cod]||0)/nDias:0;
     var diasStock=avgDia>0?Math.round(s.total/avgDia):null;
-    if(s.total===0){alertas.push({tipo:'red',title:'SIN STOCK: '+c.cod,desc:c.nombre+' — Freezers vacíos. Producir urgente.'});}
-    else if(diasStock!==null&&diasStock<=3){alertas.push({tipo:'red',title:'CRÍTICO: '+c.cod,desc:c.nombre+' — Stock para ~'+diasStock+' día'+(diasStock!==1?'s':'')+'. Producir hoy.'});}
-    else if(diasStock!==null&&diasStock<=7){alertas.push({tipo:'orange',title:'BAJO: '+c.cod,desc:c.nombre+' — Stock para ~'+diasStock+' días. Planificar producción.'});}
-    else if(diasStock!==null&&diasStock>21){alertas.push({tipo:'green',title:'SOBRESTOCK: '+c.cod,desc:c.nombre+' — '+diasStock+' días de stock. Impulsar en canal mayorista o pausar producción.'});}
+    if(s.total===0)alertas.push({tipo:'red',title:'SIN STOCK: '+c.cod,desc:c.nombre+' — Freezers vacíos. Producir urgente.'});
+    else if(diasStock!==null&&diasStock<=3)alertas.push({tipo:'red',title:'CRÍTICO: '+c.cod,desc:c.nombre+' — Stock para ~'+diasStock+' día'+(diasStock!==1?'s':'')+'. Producir hoy.'});
+    else if(diasStock!==null&&diasStock<=7)alertas.push({tipo:'orange',title:'BAJO: '+c.cod,desc:c.nombre+' — Stock para ~'+diasStock+' días.'});
+    else if(diasStock!==null&&diasStock>21)alertas.push({tipo:'green',title:'SOBRESTOCK: '+c.cod,desc:c.nombre+' — '+diasStock+' días de stock. Impulsar en canal mayorista.'});
   });
   var el=document.getElementById('dirAlertas');
-  if(!alertas.length){el.innerHTML='<div class="alert-card green"><div class="alert-icon">✅</div><div><div class="alert-title">TODO EN ORDEN</div><div class="alert-desc">Sin alertas críticas.</div></div></div>';return;}
-  el.innerHTML=alertas.map(a=>`<div class="alert-card ${a.tipo}"><div class="alert-icon">${a.tipo==='red'?'🔴':a.tipo==='orange'?'🟠':'🟢'}</div><div><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div></div>`).join('');
+  if(!alertas.length){el.innerHTML='<div class="alert-card green"><div style="font-size:18px;">✅</div><div><div class="alert-title">TODO EN ORDEN</div><div class="alert-desc">Sin alertas críticas.</div></div></div>';return;}
+  el.innerHTML=alertas.map(a=>`<div class="alert-card ${a.tipo}"><div style="font-size:18px;">${a.tipo==='red'?'🔴':a.tipo==='orange'?'🟠':'🟢'}</div><div><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div></div>`).join('');
 }
-
 function setPer(btn,p){document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');curPer=p;renderDirStats();}
 function renderDirStats(){
-  var {agg,nDias,reps}=getProdFiltered(curPer);
-  var el=document.getElementById('dirStats');
+  var {agg,nDias,reps}=getProdFiltered(curPer);var el=document.getElementById('dirStats');
   if(!reps.length){el.innerHTML='<div class="empty">Sin producción en este período.</div>';return;}
-  var sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]);
-  var maxVal=sorted[0]?sorted[0][1]:1;
-  var total=sorted.reduce((s,[,v])=>s+v,0)||1;
-  var totalUnids=sorted.reduce((s,[,v])=>s+v,0);
-  var html=`<div class="kpi-grid">
-    <div class="kpi"><div class="kpi-val">${nDias}</div><div class="kpi-lbl">Días producidos</div></div>
-    <div class="kpi"><div class="kpi-val">${totalUnids}</div><div class="kpi-lbl">Total producido</div></div>
-  </div>`;
+  var sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]);var maxVal=sorted[0]?sorted[0][1]:1;
+  var total=sorted.reduce((s,[,v])=>s+v,0)||1;var totalUnids=sorted.reduce((s,[,v])=>s+v,0);
+  var html=`<div class="kpi-grid"><div class="kpi"><div class="kpi-val">${nDias}</div><div class="kpi-lbl">Días producidos</div></div><div class="kpi"><div class="kpi-val">${totalUnids}</div><div class="kpi-lbl">Total producido</div></div></div>`;
   html+='<h2 class="st">RANKING ROTACIÓN</h2><div class="panel" style="padding:12px 10px;">';
   sorted.forEach(([cod,qty])=>{
-    var ci=codInfo(cod);
-    var bw=Math.max(4,Math.round(qty/maxVal*100));
-    var pct=Math.round(qty/total*100);
-    var avg=(qty/nDias).toFixed(1);
-    var tag=pct>=25?'tag-high':pct>=10?'tag-med':'tag-low';
-    var label=pct>=25?'ALTA':pct>=10?'MEDIA':'BAJA';
-    var color=pct>=25?'#4caf50':pct>=10?'#FFC72C':'#ef5350';
-    html+=`<div class="rot-bar"><div class="rot-info"><div class="rot-cod">${cod}</div><div class="rot-name">${ci.nombre}</div></div><div class="rot-wrap"><div class="rot-fill" style="width:${bw}%;background:${color};"></div></div><div class="rot-val">${qty}</div><span class="rot-tag ${tag}">${label}</span></div>
-    <div style="font-size:9px;color:var(--muted);text-align:right;margin:-3px 0 5px;">${pct}% del total · prom ${avg}/día</div>`;
+    var ci=codInfo(cod);var bw=Math.max(4,Math.round(qty/maxVal*100));var pct=Math.round(qty/total*100);var avg=(qty/nDias).toFixed(1);
+    var tag=pct>=25?'tag-high':pct>=10?'tag-med':'tag-low';var label=pct>=25?'ALTA':pct>=10?'MEDIA':'BAJA';var color=pct>=25?'#4caf50':pct>=10?'#FFC72C':'#ef5350';
+    html+=`<div class="rot-bar"><div class="rot-info"><div class="rot-cod">${cod}</div><div class="rot-name">${ci.nombre}</div></div><div class="rot-wrap"><div class="rot-fill" style="width:${bw}%;background:${color};"></div></div><div class="rot-val">${qty}</div><span class="rot-tag ${tag}">${label}</span></div><div style="font-size:9px;color:var(--muted);text-align:right;margin:-3px 0 5px;">${pct}% · prom ${avg}/día</div>`;
   });
   html+='</div><h2 class="st">TENDENCIA DIARIA</h2><div class="panel" style="padding:10px 12px;">';
   var byDate={};reps.forEach(r=>{byDate[r.fecha]=(r.produccion||[]).reduce((s,x)=>s+x.qty,0);});
@@ -610,13 +551,18 @@ function renderDirStats(){
   Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,10).forEach(([fecha,tot])=>{
     html+=`<div class="trend-row"><div class="trend-date">${fmtD(fecha)}</div><div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.max(4,Math.round(tot/maxDay*100))}%"></div></div><div class="trend-val">${tot}</div></div>`;
   });
-  html+='</div>';
-  el.innerHTML=html;
+  html+='</div>';el.innerHTML=html;
 }
 
-initCarga();
-loadFromCloud();
-setInterval(loadFromCloud, 60000);
+// Apps Script necesita soporte JSONP - actualizar el script
+function doInit(){
+  initCarga();
+  renderDirResumen();
+  loadFromCloud();
+  setInterval(loadFromCloud, 60000);
+}
+
+doInit();
 </script>
 </body>
 </html>
