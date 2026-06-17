@@ -324,21 +324,21 @@ function loadFromCloud(){
 }
 
 function saveToCloud(reps){
-  // Usamos un form POST via fetch con mode no-cors, y también guardamos local
-  // Para leer usamos JSONP (GET), para escribir usamos fetch no-cors
   saveRepsLocal(reps);
-  var payload = JSON.stringify({key:'reportes', value: reps});
-  fetch(API, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type': 'text/plain'},
-    body: payload
-  }).then(function(){
+  var cb = 'save_' + Date.now();
+  var json = encodeURIComponent(JSON.stringify(reps));
+  window[cb] = function(data){
+    delete window[cb];
+    document.getElementById('jsonp-save') && document.getElementById('jsonp-save').remove();
     var now = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    setSyncOk('Guardado ' + now);
-  }).catch(function(){
-    setSyncErr('Guardado local (sin nube)');
-  });
+    if(data && data.ok) setSyncOk('Guardado ' + now);
+    else setSyncErr('Error al guardar en nube');
+  };
+  var script = document.createElement('script');
+  script.id = 'jsonp-save';
+  script.src = API + '?action=save&callback=' + cb + '&value=' + json;
+  script.onerror = function(){ delete window[cb]; setSyncErr('Sin conexión — guardado local'); };
+  document.head.appendChild(script);
 }
 
 function setMode(m){
