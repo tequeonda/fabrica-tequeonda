@@ -357,7 +357,9 @@ function setMode(m){
 }
 
 function setTab(prefix,id){
-  var screen=document.getElementById('sc-'+prefix);
+  var screenId = prefix==='enc' ? 'sc-encargado' : 'sc-director';
+  var screen=document.getElementById(screenId);
+  if(!screen) return;
   screen.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   screen.querySelectorAll('.subtab-content').forEach(c=>c.classList.remove('active'));
   var arr=prefix==='enc'?['carga','png','hist','cfg']:['resumen','alertas','stats'];
