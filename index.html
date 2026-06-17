@@ -6,6 +6,7 @@
 <title>Fábrica · Teque Onda</title>
 <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
   --gold:#FFC72C;--gold-dim:rgba(255,199,44,0.10);--gold-b:rgba(255,199,44,0.25);
@@ -149,17 +150,17 @@ select option{background:#1c1c1c;}
 .del-btn:hover{color:var(--red);}
 
 /* png */
-.png-preview{background:#111;border:1px solid var(--gold-b);border-radius:11px;padding:16px;margin-bottom:11px;}
-.png-header{background:var(--gold);border-radius:7px;padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
-.png-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#111;letter-spacing:2px;}
-.png-date{font-family:'Bebas Neue',sans-serif;font-size:15px;color:#333;}
-.png-sec-title{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.12);}
+.png-preview{background:#111111;border:1px solid rgba(255,199,44,0.25);border-radius:11px;padding:16px;margin-bottom:11px;}
+.png-header{background:#FFC72C;border-radius:7px;padding:11px 15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
+.png-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#111111;letter-spacing:2px;}
+.png-date{font-family:'Bebas Neue',sans-serif;font-size:15px;color:#333333;}
+.png-sec-title{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.12);color:#FFC72C;}
 .png-prod-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);}
-.png-cod{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);background:rgba(255,199,44,.1);padding:2px 6px;border-radius:4px;}
-.png-name{font-size:13px;color:#ccc;margin-left:7px;}
-.png-qty{font-family:'Bebas Neue',sans-serif;font-size:17px;color:#fff;}
-.png-unit{font-size:12px;color:var(--muted);}
-.png-footer{display:flex;justify-content:space-between;font-size:11px;color:#555;margin-top:12px;padding-top:9px;border-top:1px solid rgba(255,255,255,.07);}
+.png-cod{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#FFC72C;background:rgba(255,199,44,.12);padding:2px 6px;border-radius:4px;}
+.png-name{font-size:13px;color:#cccccc;margin-left:7px;}
+.png-qty{font-family:'Bebas Neue',sans-serif;font-size:17px;color:#ffffff;}
+.png-unit{font-size:12px;color:#888888;}
+.png-footer{display:flex;justify-content:space-between;font-size:11px;color:#666666;margin-top:12px;padding-top:9px;border-top:1px solid rgba(255,255,255,.07);}
 
 .empty{text-align:center;padding:34px 20px;color:var(--muted);font-size:14px;}
 .period-row{display:flex;gap:7px;margin-bottom:14px;}
@@ -231,13 +232,14 @@ select option{background:#1c1c1c;}
       <label>Seleccioná el reporte</label>
       <select id="pngSelect" onchange="renderPNGPreview()"></select>
     </div>
+    <button class="btn-p" id="btnPng" onclick="descargarPNG()" style="font-size:18px;">📸 DESCARGAR IMAGEN PNG</button>
     <div id="pngPreview"></div>
     <div style="background:rgba(255,199,44,.07);border:1px solid var(--gold-b);border-radius:9px;padding:12px 14px;font-size:13px;color:var(--muted);">
-      📱 <strong style="color:var(--gold);">Enviar por WhatsApp:</strong><br>
-      Cel: mantené presionado el reporte → Guardar imagen → WA.<br>
-      Compu: clic derecho → Guardar imagen como → WA.
+      📱 <strong style="color:var(--gold);">Cómo enviar al grupo:</strong><br>
+      Tocá <strong>Descargar imagen PNG</strong> arriba. Se guarda en tu galería/descargas. Después abrís el grupo de WhatsApp y la adjuntás como foto.
     </div>
   </div>
+
 
   <div class="subtab-content" id="enc-hist">
     <select id="hFiltro" style="margin-bottom:14px;" onchange="renderHist()">
@@ -451,14 +453,96 @@ function guardar(){
 }
 
 function renderPNGSelect(){var reps=getReps();var sel=document.getElementById('pngSelect');sel.innerHTML=reps.length?reps.map((r,i)=>`<option value="${i}">${fmtD(r.fecha)} — ${{produccion:'Producción',inventario:'Inventario',ambos:'Prod+Inv'}[r.tipo]||r.tipo}</option>`).join(''):'<option>Sin reportes</option>';renderPNGPreview();}
+var CAT_HEX = {
+  'TEQUEÑOS':      {c:'#FFC72C', bg:'rgba(255,199,44,0.07)',  bd:'rgba(255,199,44,0.30)'},
+  'PASTELITOS':    {c:'#FF8A4C', bg:'rgba(255,138,76,0.08)',  bd:'rgba(255,138,76,0.32)'},
+  'MINI EMPANADAS':{c:'#5BC88A', bg:'rgba(91,200,138,0.08)',  bd:'rgba(91,200,138,0.30)'},
+  'POSTRES':       {c:'#B98AFF', bg:'rgba(185,138,255,0.08)', bd:'rgba(185,138,255,0.30)'},
+  'CACHITOS':      {c:'#FFD166', bg:'rgba(255,209,102,0.07)', bd:'rgba(255,209,102,0.28)'},
+  'BEBIDAS':       {c:'#4DB6E5', bg:'rgba(77,182,229,0.08)',  bd:'rgba(77,182,229,0.30)'},
+  'SALSAS':        {c:'#E57399', bg:'rgba(229,115,153,0.08)', bd:'rgba(229,115,153,0.30)'}
+};
+
+function pngCatBlock(title, items){
+  // items: array {cod,qty,unit}. Agrupa por categoria con bloques de color.
+  var bycat={};
+  items.forEach(x=>{var c=codInfo(x.cod).cat;if(!bycat[c])bycat[c]=[];bycat[c].push(x);});
+  var blocks='';
+  CATS.forEach(cat=>{
+    if(!bycat[cat]||!bycat[cat].length)return;
+    var col=CAT_HEX[cat]||{c:'#FFC72C',bg:'rgba(255,199,44,0.07)',bd:'rgba(255,199,44,0.30)'};
+    var catTot=bycat[cat].reduce((s,x)=>s+x.qty,0);
+    var rows='';
+    bycat[cat].forEach(x=>{
+      var ci=codInfo(x.cod);
+      var u=ci.undsXpack?` = ${(x.qty*ci.undsXpack).toLocaleString('es-AR')} u`:'';
+      rows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+        <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Bebas Neue';font-size:13px;color:${col.c};background:rgba(255,255,255,.06);padding:2px 7px;border-radius:4px;">${x.cod}</span><span style="font-size:13px;color:#ddd;">${ci.nombre}</span></div>
+        <div style="white-space:nowrap;"><span style="font-family:'Bebas Neue';font-size:17px;color:#fff;">${x.qty}</span><span style="font-size:12px;color:#888;"> ${x.unit}</span><span style="font-size:11px;color:#555;">${u}</span></div>
+      </div>`;
+    });
+    blocks+=`<div style="background:${col.bg};border:1px solid ${col.bd};border-radius:10px;margin-bottom:9px;overflow:hidden;">
+      <div style="padding:8px 13px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.06);font-family:'Bebas Neue';font-size:15px;letter-spacing:1.5px;color:${col.c};">
+        <span>${CAT_ICONS[cat]} ${cat}</span><span style="font-size:12px;color:#ddd;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:5px;">${catTot}</span>
+      </div>
+      <div style="padding:4px 13px 8px;">${rows}</div>
+    </div>`;
+  });
+  return blocks;
+}
+
 function renderPNGPreview(){
   var reps=getReps();var idx=parseInt(document.getElementById('pngSelect').value)||0;var rep=reps[idx];
   var el=document.getElementById('pngPreview');if(!rep){el.innerHTML='<div class="empty">Sin datos</div>';return;}
-  var html=`<div class="png-preview"><div class="png-header"><span class="png-title">🧀 TEQUE ONDA</span><span class="png-date">${fmtD(rep.fecha)}</span></div>`;
-  if(rep.produccion&&rep.produccion.length){html+=`<div style="margin-bottom:11px;"><div class="png-sec-title" style="color:var(--gold);">⚡ PRODUCCIÓN</div>`;rep.produccion.forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${x.qty*ci.undsXpack} unds`:'';html+=`<div class="png-prod-row"><div><span class="png-cod">${x.cod}</span><span class="png-name">${ci.nombre}</span></div><div><span class="png-qty">${x.qty}</span><span class="png-unit"> ${x.unit}${u}</span></div></div>`;});html+='</div>';}
-  if(rep.inventario){[1,2,3].forEach(f=>{var items=rep.inventario[f]||[];if(!items.length)return;html+=`<div style="margin-bottom:11px;"><div class="png-sec-title" style="color:var(--gold);">🧊 FREEZER ${f}</div>`;items.forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${x.qty*ci.undsXpack} u`:'';html+=`<div class="png-prod-row"><div><span class="png-cod">${x.cod}</span><span class="png-name">${ci.nombre}</span></div><div><span class="png-qty">${x.qty}</span><span class="png-unit"> ${ci.unit}${u}</span></div></div>`;});html+='</div>';});}
+  var html=`<div class="png-preview" id="pngCard"><div class="png-header"><span class="png-title">🧀 TEQUE ONDA</span><span class="png-date">${fmtD(rep.fecha)}</span></div>`;
+
+  if(rep.produccion&&rep.produccion.length){
+    var prodTot=rep.produccion.reduce((s,x)=>s+x.qty,0);
+    html+=`<div style="margin-bottom:13px;"><div style="font-family:'Bebas Neue';font-size:13px;letter-spacing:2px;color:#FFC72C;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(255,199,44,.25);">⚡ PRODUCCIÓN DEL DÍA</div>`;
+    html+=pngCatBlock('PRODUCCIÓN', rep.produccion);
+    html+='</div>';
+  }
+
+  if(rep.inventario){
+    [1,2,3].forEach(f=>{
+      var items=rep.inventario[f]||[];if(!items.length)return;
+      var ftot=items.reduce((s,x)=>s+x.qty,0);
+      html+=`<div style="margin-bottom:13px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(255,199,44,.25);">
+          <span style="font-family:'Bebas Neue';font-size:13px;letter-spacing:2px;color:#FFC72C;">🧊 FREEZER ${f}</span>
+          <span style="font-family:'Bebas Neue';font-size:12px;color:#111;background:#FFC72C;padding:2px 8px;border-radius:4px;">${ftot} UNID</span>
+        </div>`;
+      html+=pngCatBlock('FREEZER '+f, items);
+      html+='</div>';
+    });
+  }
+
   html+=`<div class="png-footer"><span>Teque Onda · Fábrica Constitución</span><span>tequeonda.com.ar</span></div></div>`;
   el.innerHTML=html;
+}
+
+function descargarPNG(){
+  var card=document.getElementById('pngCard');
+  if(!card){alert('Seleccioná un reporte primero.');return;}
+  if(typeof html2canvas==='undefined'){alert('La librería de imagen no cargó. Verificá tu conexión y recargá.');return;}
+  var btn=document.getElementById('btnPng');
+  var orig=btn.textContent;
+  btn.disabled=true;btn.textContent='Generando imagen...';
+  var reps=getReps();var idx=parseInt(document.getElementById('pngSelect').value)||0;var rep=reps[idx];
+  var fname='TequeOnda_'+(rep?rep.fecha:today())+'.png';
+  html2canvas(card,{backgroundColor:'#111',scale:2,useCORS:true,logging:false}).then(function(canvas){
+    canvas.toBlob(function(blob){
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;a.download=fname;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      btn.disabled=false;btn.textContent=orig;
+    },'image/png');
+  }).catch(function(e){
+    btn.disabled=false;btn.textContent=orig;
+    alert('No se pudo generar la imagen. Probá de nuevo.');
+  });
 }
 
 function renderHist(){
