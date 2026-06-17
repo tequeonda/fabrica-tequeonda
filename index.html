@@ -280,7 +280,7 @@ var rowCount=0, curPer='semana';
 
 function getCods(){try{return JSON.parse(localStorage.getItem('to_cods_v3')||'null')||DEFAULT_CODIGOS;}catch(e){return DEFAULT_CODIGOS;}}
 function saveCods(c){localStorage.setItem('to_cods_v3',JSON.stringify(c));}
-function getReps(){try{return JSON.parse(localStorage.getItem('to_reps_v3')||'[]');}catch(e){return[];}}
+function getReps(){try{var r=JSON.parse(localStorage.getItem('to_reps_v3')||'[]');return Array.isArray(r)?r:[];}catch(e){return[];}}
 function saveRepsLocal(r){localStorage.setItem('to_reps_v3',JSON.stringify(r));}
 function codInfo(c){return getCods().find(x=>x.cod===c)||{cod:c,nombre:c,cat:'?',unit:'Unid.',undsXpack:0};}
 function today(){return new Date().toISOString().split('T')[0];}
@@ -323,22 +323,30 @@ function loadFromCloud(){
   document.head.appendChild(script);
 }
 
-function saveToCloud(reps){
+function saveToCloud(reps, onDone){
   saveRepsLocal(reps);
   var cb = 'save_' + Date.now();
   var json = encodeURIComponent(JSON.stringify(reps));
-  window[cb] = function(data){
-    delete window[cb];
-    document.getElementById('jsonp-save') && document.getElementById('jsonp-save').remove();
+  var finished = false;
+  function done(ok){
+    if(finished) return;
+    finished = true;
+    if(window[cb]) delete window[cb];
+    var s = document.getElementById('jsonp-save');
+    if(s) s.remove();
     var now = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    if(data && data.ok) setSyncOk('Guardado ' + now);
-    else setSyncErr('Error al guardar en nube');
-  };
+    if(ok) setSyncOk('Guardado ' + now);
+    else setSyncErr('Guardado local (revisá conexión)');
+    if(onDone) onDone(ok);
+  }
+  window[cb] = function(data){ done(data && data.ok); };
   var script = document.createElement('script');
   script.id = 'jsonp-save';
   script.src = API + '?action=save&callback=' + cb + '&value=' + json;
-  script.onerror = function(){ delete window[cb]; setSyncErr('Sin conexión — guardado local'); };
+  script.onerror = function(){ done(false); };
   document.head.appendChild(script);
+  // timeout de seguridad: si en 8s no volvió, liberamos igual
+  setTimeout(function(){ done(false); }, 8000);
 }
 
 function setMode(m){
@@ -410,14 +418,15 @@ function guardar(){
   if(tipo==='produccion'||tipo==='ambos') rep.produccion=getRows('prodRows');
   if(tipo==='inventario'||tipo==='ambos') rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};
   var btn=document.getElementById('btnGuardar');
-  btn.disabled=true;btn.textContent='Guardando...';
   var reps=getReps();
   var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);
-  if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?')){btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';return;}reps[idx]=rep;}
+  if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}
   else reps.unshift(rep);
-  saveToCloud(reps);
-  btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';
-  var sm=document.getElementById('saveMsg');sm.style.display='block';setTimeout(()=>sm.style.display='none',3000);
+  btn.disabled=true;btn.textContent='Guardando...';
+  saveToCloud(reps, function(ok){
+    btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';
+    if(ok){var sm=document.getElementById('saveMsg');sm.style.display='block';setTimeout(()=>sm.style.display='none',3000);}
+  });
 }
 
 function renderPNGSelect(){
