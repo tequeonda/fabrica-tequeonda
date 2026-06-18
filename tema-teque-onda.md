@@ -6,8 +6,9 @@
 ---
 
 ## Concepto
-Tema **claro** (fondo blanco), profesional, con la identidad de la fábrica:
-**Negro + Verde institucional + Amarillo dorado.** Tipografía display para títulos y números, Oswald para códigos de producto.
+Tema **claro** (fondo blanco), profesional, con la identidad de la fábrica.
+Jerarquía de color: **Dorado dominante (marca y acción) · Negro estructural (headers, KPIs) · Verde de acento (totales, confirmaciones).**
+Tipografía display (Bebas Neue) para títulos y números, Oswald para códigos de producto, Fira Sans para cuerpo.
 
 ---
 
@@ -15,10 +16,10 @@ Tema **claro** (fondo blanco), profesional, con la identidad de la fábrica:
 
 | Rol | Hex | Uso |
 |-----|-----|-----|
-| Negro (ink) | `#111111` | Headers, cabeceras de categoría, KPIs, badges de total |
-| Verde institucional | `#00a82d` | Acentos, botón guardar |
+| Amarillo dorado | `#FFC72C` | **Color dominante**: cabeceras de categoría, botón principal, pestañas activas, líneas de header, badges de total |
+| Negro (ink) | `#111111` | **Estructura**: barra de modos, KPIs, header de freezer, texto sobre dorado |
+| Verde institucional | `#00a82d` | **Acento**: totales de producto, valores de tendencia, números de carga |
 | Verde brillante | `#00d838` | Números de total sobre negro, fecha en header |
-| Amarillo dorado | `#FFC72C` | Marca, pestañas activas, "ONDA", bordes de tequeños, líneas, totales |
 | Dorado oscuro | `#c79500` | Texto dorado sobre fondo claro |
 | Fondo página | `#f4f3ee` | Background general |
 | Card / superficie | `#ffffff` | Paneles, tarjetas |
@@ -59,11 +60,11 @@ Tamaños base: cuerpo 15px, títulos de sección 15px, números KPI 36px, númer
 
 ## Componentes clave
 
-### Header de marca (negro con línea verde)
+### Header de marca (negro con línea dorada)
 ```html
-<div style="background:#111;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #00a82d;">
+<div style="background:#111;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #FFC72C;">
   <span style="font-family:'Bebas Neue';font-size:22px;color:#fff;letter-spacing:3px;">🧀 TEQUE <span style="color:#FFC72C;">ONDA</span></span>
-  <span style="font-family:'Bebas Neue';font-size:14px;color:#00d838;letter-spacing:2px;">VIERNES</span>
+  <span style="font-family:'Bebas Neue';font-size:14px;color:#FFC72C;letter-spacing:2px;">VIERNES</span>
 </div>
 ```
 
@@ -72,13 +73,13 @@ Tamaños base: cuerpo 15px, títulos de sección 15px, números KPI 36px, númer
 <span style="font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:1px;color:#111;background:#eceae3;padding:1px 7px;border-radius:5px;">TO</span>
 ```
 
-### Bloque de categoría (barra lateral + cabecera negra)
+### Bloque de categoría (barra lateral + cabecera dorada, texto negro)
 ```html
 <div style="border-left:5px solid #FFC72C;background:#fffdf5;border-radius:0 9px 9px 0;border:1px solid #e6e4db;overflow:hidden;">
-  <div style="background:#111;padding:5px 12px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;color:#FFC72C;display:flex;justify-content:space-between;">
-    <span>🧀 TEQUEÑOS</span><span style="color:#00d838;">132</span>
+  <div style="background:#FFC72C;padding:5px 12px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;color:#111;display:flex;justify-content:space-between;">
+    <span>🧀 TEQUEÑOS</span><span style="color:#1a6b1a;">132</span>
   </div>
-  <!-- filas de producto aquí -->
+  <!-- filas de producto aquí. La cabecera usa el color de la categoría como fondo. -->
 </div>
 ```
 
@@ -90,9 +91,9 @@ Tamaños base: cuerpo 15px, títulos de sección 15px, números KPI 36px, númer
 </div>
 ```
 
-### Botón principal (verde)
+### Botón principal (dorado, texto negro)
 ```html
-<button style="background:#00a82d;color:#fff;border:none;padding:14px;font-family:'Bebas Neue';font-size:21px;letter-spacing:2px;border-radius:9px;width:100%;">▶ GUARDAR</button>
+<button style="background:#FFC72C;color:#111;border:none;padding:14px;font-family:'Bebas Neue';font-size:21px;letter-spacing:2px;border-radius:9px;width:100%;">▶ GUARDAR</button>
 ```
 
 ### Pestañas (negro con activa dorada)
@@ -107,8 +108,10 @@ Tamaños base: cuerpo 15px, títulos de sección 15px, números KPI 36px, númer
 
 ## Reglas de estilo
 - Fondo siempre claro (`#f4f3ee` página, `#ffffff` tarjetas).
-- Negro para dar peso y jerarquía (headers, cabeceras, KPIs).
-- Verde para acciones y acentos positivos; dorado para la marca y elementos destacados.
+- **Dorado es el color dominante**: cabeceras de categoría (fondo dorado, texto negro), botón principal, pestañas activas, líneas de header, badges de total.
+- **Negro es estructural**: barra de modos, KPIs (fondo negro, número dorado), header de freezer (fondo negro con línea dorada abajo). Da peso y evita que el dorado sature.
+- **Verde es acento puntual**: totales de producto en tablas, valores de tendencia, mensaje de guardado, foco de inputs.
+- Texto sobre dorado SIEMPRE negro `#111`. Totales sobre cabecera dorada en verde oscuro `#1a6b1a` para legibilidad.
 - Títulos y números en Bebas Neue con buen interletrado.
 - Códigos de producto SIEMPRE en Oswald sobre badge crema `#eceae3`.
 - Categorías con barra lateral de 5px del color de categoría + cabecera negra.
