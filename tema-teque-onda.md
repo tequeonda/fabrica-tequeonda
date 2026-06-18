@@ -16,9 +16,9 @@ Tema **claro** (fondo blanco), profesional, con la identidad de la fábrica:
 | Rol | Hex | Uso |
 |-----|-----|-----|
 | Negro (ink) | `#111111` | Headers, cabeceras de categoría, KPIs, badges de total |
-| Verde institucional | `#00a82d` | Acentos, botón guardar, líneas, totales |
+| Verde institucional | `#00a82d` | Acentos, botón guardar |
 | Verde brillante | `#00d838` | Números de total sobre negro, fecha en header |
-| Amarillo dorado | `#FFC72C` | Marca, pestañas activas, "ONDA", bordes de tequeños |
+| Amarillo dorado | `#FFC72C` | Marca, pestañas activas, "ONDA", bordes de tequeños, líneas, totales |
 | Dorado oscuro | `#c79500` | Texto dorado sobre fondo claro |
 | Fondo página | `#f4f3ee` | Background general |
 | Card / superficie | `#ffffff` | Paneles, tarjetas |
