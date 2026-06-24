@@ -390,17 +390,18 @@ function saveToCloud(reps,onDone){
   var expectedCount=reps.length;
   function done(ok){if(finished)return;finished=true;var now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(ok)setSyncOk('Guardado '+now);else setSyncErr('Guardado local (revisá conexión)');if(onDone)onDone(ok);}
 
-  // POST con form-urlencoded: no tiene limite de tamaño como la URL GET
-  var body='value='+encodeURIComponent(JSON.stringify(reps));
-  fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
+  // POST con text/plain: Apps Script lo lee de e.postData.contents. Sin límite de tamaño.
+  fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(reps)})
     .then(function(){
       // no-cors no deja leer la respuesta -> confirmamos leyendo de la nube
-      setTimeout(function(){confirmSave(expectedCount,done);},1500);
+      setTimeout(function(){confirmSave(expectedCount,done);},2000);
     })
-    .catch(function(){done(false);});
+    .catch(function(){
+      setTimeout(function(){confirmSave(expectedCount,done);},2000);
+    });
 
-  // red de seguridad: si en 12s no confirmó, marcamos fallo
-  setTimeout(function(){done(false);},12000);
+  // red de seguridad
+  setTimeout(function(){if(!finished)confirmSave(expectedCount,done);},9000);
 }
 
 function confirmSave(expectedCount,done){
