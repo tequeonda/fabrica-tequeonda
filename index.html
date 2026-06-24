@@ -39,9 +39,9 @@ h2.st{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;colo
 .panel{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:14px;}
 input,select{background:#fff;border:1px solid #d6d4ca;border-radius:7px;color:var(--ink);font-family:'Fira Sans',sans-serif;font-size:15px;padding:9px 10px;width:100%;outline:none;-webkit-appearance:none;}
 input:focus,select:focus{border-color:var(--green);}
-.btn-p{width:100%;background:var(--green);color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;border-radius:9px;cursor:pointer;margin-bottom:8px;}
+.btn-p{width:100%;background:var(--gold);color:var(--ink);border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;border-radius:9px;cursor:pointer;margin-bottom:8px;}
 .btn-p:disabled{opacity:.5;cursor:not-allowed;}
-.btn-s{background:#fff;color:var(--green);border:1.5px solid var(--green);padding:11px 14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;border-radius:8px;cursor:pointer;width:100%;margin-bottom:8px;}
+.btn-s{background:#fff;color:var(--gold-d);border:1.5px solid var(--gold);padding:11px 14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;border-radius:8px;cursor:pointer;width:100%;margin-bottom:8px;}
 .btn-sm{background:#fff;color:var(--muted);border:1px solid #d6d4ca;padding:7px 12px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;border-radius:6px;cursor:pointer;}
 .btn-sm.active{background:var(--ink);border-color:var(--ink);color:var(--gold);}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
@@ -63,15 +63,15 @@ input:focus,select:focus{border-color:var(--green);}
 .cat-block.CACHITOS{border-left-color:var(--c-cac);background:var(--c-cac-bg);}
 .cat-block.BEBIDAS{border-left-color:var(--c-beb);background:var(--c-beb-bg);}
 .cat-block.SALSAS{border-left-color:var(--c-sal);background:var(--c-sal-bg);}
-.cat-block-head{background:var(--ink);padding:5px 12px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center;}
-.cat-block.TEQUEÑOS .cat-block-head{color:var(--c-teq);}
-.cat-block.PASTELITOS .cat-block-head{color:var(--c-pas);}
-.cat-block.MINI-EMPANADAS .cat-block-head{color:var(--c-emp);}
-.cat-block.POSTRES .cat-block-head{color:var(--c-pos);}
-.cat-block.CACHITOS .cat-block-head{color:var(--c-cac);}
-.cat-block.BEBIDAS .cat-block-head{color:var(--c-beb);}
-.cat-block.SALSAS .cat-block-head{color:var(--c-sal);}
-.cat-block-total{color:var(--green-br);}
+.cat-block-head{background:var(--gold);padding:5px 12px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;display:flex;justify-content:space-between;align-items:center;color:var(--ink);}
+
+
+
+
+
+
+
+.cat-block-total{color:#1a6b1a;}
 .cons-table{width:100%;border-collapse:collapse;}
 .cons-table th{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);padding:5px 6px;text-align:center;font-weight:400;}
 .cons-table th:first-child{text-align:left;width:44%;}
@@ -84,9 +84,9 @@ input:focus,select:focus{border-color:var(--green);}
 
 /* detalle freezer */
 .freezer-card{background:var(--card);border:1px solid var(--line);border-radius:11px;margin-bottom:11px;overflow:hidden;}
-.freezer-head{background:var(--ink);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+.freezer-head{background:var(--ink);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);}
 .freezer-num{font-family:'Bebas Neue',sans-serif;font-size:17px;color:#fff;letter-spacing:3px;}
-.freezer-badge{background:var(--green);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 9px;border-radius:10px;letter-spacing:1px;}
+.freezer-badge{background:var(--gold);color:var(--ink);font-family:'Bebas Neue',sans-serif;font-size:12px;padding:2px 9px;border-radius:10px;letter-spacing:1px;}
 .fz-body{padding:9px 12px;}
 .fz-cat{border-left:4px solid;border-radius:0 7px 7px 0;margin-bottom:7px;overflow:hidden;}
 .fz-cat.TEQUEÑOS{border-left-color:var(--c-teq);background:var(--c-teq-bg);}
@@ -96,15 +96,15 @@ input:focus,select:focus{border-color:var(--green);}
 .fz-cat.CACHITOS{border-left-color:var(--c-cac);background:var(--c-cac-bg);}
 .fz-cat.BEBIDAS{border-left-color:var(--c-beb);background:var(--c-beb-bg);}
 .fz-cat.SALSAS{border-left-color:var(--c-sal);background:var(--c-sal-bg);}
-.fz-cat-head{background:var(--ink);padding:4px 11px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;display:flex;justify-content:space-between;}
-.fz-cat.TEQUEÑOS .fz-cat-head{color:var(--c-teq);}
-.fz-cat.PASTELITOS .fz-cat-head{color:var(--c-pas);}
-.fz-cat.MINI-EMPANADAS .fz-cat-head{color:var(--c-emp);}
-.fz-cat.POSTRES .fz-cat-head{color:var(--c-pos);}
-.fz-cat.CACHITOS .fz-cat-head{color:var(--c-cac);}
-.fz-cat.BEBIDAS .fz-cat-head{color:var(--c-beb);}
-.fz-cat.SALSAS .fz-cat-head{color:var(--c-sal);}
-.fz-cat-tot{color:var(--green-br);}
+.fz-cat-head{background:var(--gold);padding:4px 11px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;display:flex;justify-content:space-between;color:var(--ink);}
+
+
+
+
+
+
+
+.fz-cat-tot{color:#1a6b1a;}
 .fz-rows{padding:2px 11px;}
 .fz-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.04);}
 .fz-row:last-child{border-bottom:none;}
@@ -152,9 +152,9 @@ input:focus,select:focus{border-color:var(--green);}
 .qty-big{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green);text-align:center;padding:8px 4px;width:72px;flex-shrink:0;}
 .unit-sm{font-size:13px;padding:9px 4px;width:68px;flex-shrink:0;}
 .hint-sm{font-size:11px;color:#999;width:48px;text-align:right;flex-shrink:0;line-height:1.2;}
-.add-row-btn{width:100%;background:#fff;border:1px dashed var(--green);border-radius:8px;color:var(--green);font-size:13px;padding:9px;cursor:pointer;margin-bottom:10px;}
+.add-row-btn{width:100%;background:#fff;border:1px dashed var(--gold);border-radius:8px;color:var(--gold-d);font-size:13px;padding:9px;cursor:pointer;margin-bottom:10px;}
 .save-msg{background:var(--green);color:#fff;border-radius:7px;padding:10px 14px;font-size:14px;font-weight:600;display:none;text-align:center;margin-bottom:8px;}
-.err-msg{background:#fbe2e2;color:#c0392b;border-radius:7px;padding:10px 14px;font-size:13px;display:none;text-align:center;margin-bottom:8px;}
+.err-msg{background:#fbe2e2;color:#c0392b;border:1.5px solid #e23b3b;border-radius:7px;padding:12px 14px;font-size:14px;font-weight:600;display:none;text-align:center;margin-bottom:8px;line-height:1.4;}
 
 /* historial */
 .hist-card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:9px;}
@@ -385,11 +385,35 @@ function loadFromCloud(){
   var script=document.createElement('script');script.id='jsonp-script';script.src=API+'?callback='+cb+'&t='+Date.now();script.onerror=function(){delete window[cb];setSyncErr('Sin conexión — datos locales');};document.head.appendChild(script);
 }
 function saveToCloud(reps,onDone){
-  saveRepsLocal(reps);var cb='save_'+Date.now();var json=encodeURIComponent(JSON.stringify(reps));var finished=false;
-  function done(ok){if(finished)return;finished=true;if(window[cb])delete window[cb];var s=document.getElementById('jsonp-save');if(s)s.remove();var now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(ok)setSyncOk('Guardado '+now);else setSyncErr('Guardado local (revisá conexión)');if(onDone)onDone(ok);}
-  window[cb]=function(data){done(data&&data.ok);};
-  var script=document.createElement('script');script.id='jsonp-save';script.src=API+'?action=save&callback='+cb+'&value='+json;script.onerror=function(){done(false);};document.head.appendChild(script);
-  setTimeout(function(){done(false);},8000);
+  saveRepsLocal(reps);
+  var finished=false;
+  var expectedCount=reps.length;
+  function done(ok){if(finished)return;finished=true;var now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(ok)setSyncOk('Guardado '+now);else setSyncErr('Guardado local (revisá conexión)');if(onDone)onDone(ok);}
+
+  // POST con form-urlencoded: no tiene limite de tamaño como la URL GET
+  var body='value='+encodeURIComponent(JSON.stringify(reps));
+  fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
+    .then(function(){
+      // no-cors no deja leer la respuesta -> confirmamos leyendo de la nube
+      setTimeout(function(){confirmSave(expectedCount,done);},1500);
+    })
+    .catch(function(){done(false);});
+
+  // red de seguridad: si en 12s no confirmó, marcamos fallo
+  setTimeout(function(){done(false);},12000);
+}
+
+function confirmSave(expectedCount,done){
+  var cb='conf_'+Date.now();
+  window[cb]=function(data){
+    delete window[cb];var s=document.getElementById('jsonp-conf');if(s)s.remove();
+    var ok=data&&data.reportes&&Array.isArray(data.reportes)&&data.reportes.length>=expectedCount;
+    if(ok&&data.reportes)saveRepsLocal(data.reportes);
+    done(!!ok);
+  };
+  var script=document.createElement('script');script.id='jsonp-conf';script.src=API+'?callback='+cb+'&t='+Date.now();
+  script.onerror=function(){delete window[cb];done(false);};
+  document.head.appendChild(script);
 }
 
 function setMode(m){document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===(m==='encargado'?0:1)));document.getElementById('sc-encargado').classList.toggle('active',m==='encargado');document.getElementById('sc-director').classList.toggle('active',m==='director');if(m==='director')loadFromCloud();}
@@ -414,7 +438,24 @@ function updHint(id){var row=document.getElementById('row_'+id);if(!row)return;v
 function initCarga(){if(!document.getElementById('eFecha').value)document.getElementById('eFecha').value=today();onTipoChange();if(!document.getElementById('prodRows').children.length)addRow('prodRows');}
 function onTipoChange(){var t=document.getElementById('eTipo').value;document.getElementById('secProd').style.display=(t==='produccion'||t==='ambos')?'block':'none';document.getElementById('secInv').style.display=(t==='inventario'||t==='ambos')?'block':'none';if(t==='inventario'||t==='ambos'){for(var f=1;f<=3;f++){var el=document.getElementById('inv'+f+'Rows');if(el&&!el.children.length)addRow('inv'+f+'Rows');}}}
 function getRows(cid){var rows=[];document.getElementById(cid).querySelectorAll('.freezer-row').forEach(row=>{var cod=row.querySelector('.prod-sel').value;var qty=parseInt(row.querySelector('.qty-big').value)||0;var unit=row.querySelector('.unit-sm').value;if(cod&&qty>0)rows.push({cod,qty,unit});});return rows;}
-function guardar(){var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}var tipo=document.getElementById('eTipo').value;var rep={fecha,tipo,ts:new Date().toISOString()};if(tipo==='produccion'||tipo==='ambos')rep.produccion=getRows('prodRows');if(tipo==='inventario'||tipo==='ambos')rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};var btn=document.getElementById('btnGuardar');var reps=getReps();var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}else reps.unshift(rep);btn.disabled=true;btn.textContent='Guardando...';saveToCloud(reps,function(ok){btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';if(ok){var sm=document.getElementById('saveMsg');sm.style.display='block';setTimeout(()=>sm.style.display='none',3000);}});}
+function guardar(){var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}var tipo=document.getElementById('eTipo').value;var rep={fecha,tipo,ts:new Date().toISOString()};if(tipo==='produccion'||tipo==='ambos')rep.produccion=getRows('prodRows');if(tipo==='inventario'||tipo==='ambos')rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};var btn=document.getElementById('btnGuardar');var reps=getReps();var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}else reps.unshift(rep);
+  document.getElementById('saveMsg').style.display='none';document.getElementById('errMsg').style.display='none';
+  btn.disabled=true;btn.textContent='Guardando en la nube...';
+  saveToCloud(reps,function(ok){
+    btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';
+    var sm=document.getElementById('saveMsg');var em=document.getElementById('errMsg');
+    if(ok){sm.textContent='✓ Guardado y sincronizado con la nube';sm.style.display='block';setTimeout(()=>sm.style.display='none',3500);}
+    else{em.innerHTML='⚠ NO se subió a la nube. El dato quedó solo en este teléfono.<br><button onclick="reintentarSubida()" style="margin-top:8px;background:#e23b3b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-family:\'Bebas Neue\';font-size:14px;letter-spacing:1px;cursor:pointer;">↻ REINTENTAR SUBIDA</button>';em.style.display='block';}
+  });
+}
+function reintentarSubida(){
+  var em=document.getElementById('errMsg');em.innerHTML='Reintentando...';
+  var reps=getReps();
+  saveToCloud(reps,function(ok){
+    if(ok){em.style.display='none';var sm=document.getElementById('saveMsg');sm.textContent='✓ Subido a la nube correctamente';sm.style.display='block';setTimeout(()=>sm.style.display='none',3500);}
+    else{em.innerHTML='⚠ Sigue sin subir. Verificá la conexión y volvé a intentar.<br><button onclick="reintentarSubida()" style="margin-top:8px;background:#e23b3b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-family:\'Bebas Neue\';font-size:14px;letter-spacing:1px;cursor:pointer;">↻ REINTENTAR SUBIDA</button>';}
+  });
+}
 
 function pngCatBlock(items){
   var bycat={};items.forEach(x=>{var c=codInfo(x.cod).cat;if(!bycat[c])bycat[c]=[];bycat[c].push(x);});
@@ -425,7 +466,7 @@ function pngCatBlock(items){
     var catTot=bycat[cat].reduce((s,x)=>s+x.qty,0);
     var rows='';
     bycat[cat].forEach(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` = ${(x.qty*ci.undsXpack).toLocaleString('es-AR')} u`:'';rows+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid rgba(0,0,0,.05);"><div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Oswald';font-weight:600;font-size:13px;letter-spacing:1px;color:#111;background:#eceae3;padding:1px 7px;border-radius:5px;">${x.cod}</span><span style="font-size:13px;color:#222;">${ci.nombre}</span></div><div style="white-space:nowrap;"><span style="font-family:'Bebas Neue';font-size:17px;color:#111;">${x.qty}</span><span style="font-size:10px;color:#aaa;"> ${x.unit}${u}</span></div></div>`;});
-    blocks+=`<div style="border-left:5px solid ${col.c};background:${col.bg};border-radius:0 8px 8px 0;margin-bottom:6px;overflow:hidden;border-top:1px solid #eee;border-right:1px solid #eee;border-bottom:1px solid #eee;"><div style="background:#111;padding:4px 12px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;color:${col.c};display:flex;justify-content:space-between;"><span>${CAT_ICONS[cat]} ${cat}</span><span style="color:#00d838;">${catTot}</span></div><div style="padding:2px 12px;">${rows}</div></div>`;
+    blocks+=`<div style="border-left:5px solid ${col.c};background:${col.bg};border-radius:0 8px 8px 0;margin-bottom:6px;overflow:hidden;border-top:1px solid #eee;border-right:1px solid #eee;border-bottom:1px solid #eee;"><div style="background:${col.c};padding:4px 12px;font-family:'Bebas Neue';font-size:15px;letter-spacing:2px;color:#111;display:flex;justify-content:space-between;"><span>${CAT_ICONS[cat]} ${cat}</span><span style="color:#1a6b1a;">${catTot}</span></div><div style="padding:2px 12px;">${rows}</div></div>`;
   });
   return blocks;
 }
@@ -433,9 +474,9 @@ function renderPNGSelect(){var reps=getReps();var sel=document.getElementById('p
 function renderPNGPreview(){
   var reps=getReps();var idx=parseInt(document.getElementById('pngSelect').value)||0;var rep=reps[idx];
   var el=document.getElementById('pngPreview');if(!rep){el.innerHTML='<div class="empty">Sin datos</div>';return;}
-  var html=`<div class="png-preview" id="pngCard"><div class="png-header"><span class="png-title">🧀 TEQUE <span style="color:#FFC72C;">ONDA</span></span><div style="text-align:right;"><div style="font-family:'Bebas Neue';font-size:16px;color:#00d838;letter-spacing:2px;line-height:1;">${diaSemana(rep.fecha)}</div><div style="font-family:'Bebas Neue';font-size:13px;color:#999;letter-spacing:1px;">${fmtD(rep.fecha)}</div></div></div><div style="padding:13px 15px;">`;
+  var html=`<div class="png-preview" id="pngCard"><div class="png-header"><span class="png-title">🧀 TEQUE <span style="color:#FFC72C;">ONDA</span></span><div style="text-align:right;"><div style="font-family:'Bebas Neue';font-size:16px;color:#FFC72C;letter-spacing:2px;line-height:1;">${diaSemana(rep.fecha)}</div><div style="font-family:'Bebas Neue';font-size:13px;color:#999;letter-spacing:1px;">${fmtD(rep.fecha)}</div></div></div><div style="padding:13px 15px;">`;
   if(rep.produccion&&rep.produccion.length){html+=`<div style="font-family:'Bebas Neue';font-size:14px;letter-spacing:2px;color:#111;border-bottom:2px solid #FFC72C;padding-bottom:4px;margin-bottom:9px;">⚡ PRODUCCIÓN DEL DÍA</div>`;html+=pngCatBlock(rep.produccion);html+='<div style="height:6px;"></div>';}
-  if(rep.inventario){[1,2,3].forEach(f=>{var items=rep.inventario[f]||[];if(!items.length)return;var ftot=items.reduce((s,x)=>s+x.qty,0);html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-family:'Bebas Neue';font-size:15px;letter-spacing:3px;color:#111;">🧊 FREEZER ${f}</span><span style="flex:1;height:1px;background:#e5e5e0;"></span><span style="font-family:'Bebas Neue';font-size:12px;color:#fff;background:#00a82d;padding:2px 9px;border-radius:10px;">${ftot} UNID</span></div>`;html+=pngCatBlock(items);html+='<div style="height:6px;"></div>';});}
+  if(rep.inventario){[1,2,3].forEach(f=>{var items=rep.inventario[f]||[];if(!items.length)return;var ftot=items.reduce((s,x)=>s+x.qty,0);html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-family:'Bebas Neue';font-size:15px;letter-spacing:3px;color:#111;">🧊 FREEZER ${f}</span><span style="flex:1;height:1px;background:#e5e5e0;"></span><span style="font-family:'Bebas Neue';font-size:12px;color:#111;background:#FFC72C;padding:2px 9px;border-radius:10px;">${ftot} UNID</span></div>`;html+=pngCatBlock(items);html+='<div style="height:6px;"></div>';});}
   html+=`</div><div class="png-footer"><span>Teque Onda · Fábrica Constitución</span><span>tequeonda.com.ar</span></div></div>`;
   el.innerHTML=html;
 }
