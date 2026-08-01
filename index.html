@@ -30,6 +30,7 @@ body{background:var(--bg);font-family:'Fira Sans',sans-serif;color:var(--txt);fo
 .mode-btn.active .mode-icon{color:var(--gold);}
 .mode-icon{display:block;font-size:20px;margin-bottom:2px;}
 .screen{display:none;padding:14px 12px 90px;max-width:520px;margin:0 auto;}
+@media (min-width:700px){.screen{max-width:760px;padding:22px 30px 90px;}}
 .screen.active{display:block;}
 .tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--ink);border-radius:10px;padding:4px;}
 .tab{flex:1;padding:9px 4px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#999;cursor:pointer;border:none;background:none;border-radius:7px;transition:all .15s;}
@@ -685,9 +686,28 @@ function renderDirStats(){
     });
     html+='</div>';
   }
-  html+='<h2 class="st">EVOLUCIÓN ÚLTIMOS MESES</h2><div class="panel" style="padding:12px 14px;">';
-  var last6=keys.slice(0,6).reverse();var maxTot=Math.max(...last6.map(k=>monthStats(k).totalPiezas),1);
-  last6.forEach(k=>{var t=monthStats(k).totalPiezas;html+=`<div class="trend-row"><div class="trend-date">${monthLabel(k)}</div><div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.max(4,Math.round(t/maxTot*100))}%;${k===mk?'background:var(--gold-d);':''}"></div></div><div class="trend-val" style="${k===mk?'color:var(--gold-d);':''}">${t.toLocaleString('es-AR')}</div></div>`;});
+  html+='<h2 class="st">EVOLUCIÓN MENSUAL POR CATEGORÍA</h2>';
+  var last6=keys.slice(0,6).reverse();
+  var monthCatSet=new Set();last6.forEach(k=>{Object.keys(monthStats(k).porCat).forEach(c=>monthCatSet.add(c));});
+  var mcatKeys=CATS.filter(c=>monthCatSet.has(c));
+  var maxMU=0;last6.forEach(k=>{var ms=monthStats(k);mcatKeys.forEach(cat=>{if(ms.porCat[cat])maxMU=Math.max(maxMU,ms.porCat[cat].piezas);});});
+  html+=`<div style="display:flex;gap:14px;margin-bottom:10px;font-size:11px;color:var(--muted);flex-wrap:wrap;">${mcatKeys.map(cat=>{var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';return `<span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:${color};"></span>${cat}</span>`;}).join('')}</div>`;
+  html+='<div class="panel" style="padding:12px 14px;">';
+  last6.forEach((k,i)=>{
+    var ms=monthStats(k);var isSel=k===mk;
+    html+=`<div style="margin-bottom:12px;padding-bottom:12px;${i===last6.length-1?'':'border-bottom:1px solid var(--line);'}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:${isSel?'var(--gold-d)':'var(--ink)'};">${monthLabel(k)}${isSel?' <span style="font-size:10px;color:var(--muted);">(seleccionado)</span>':''}</span>
+        <span style="font-size:11px;color:var(--muted);">${ms.totalPiezas.toLocaleString('es-AR')} u totales</span>
+      </div>`;
+    mcatKeys.forEach(cat=>{
+      var c=ms.porCat[cat];var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';
+      var u=c?c.piezas:0;var w=maxMU?Math.max(3,Math.round(u/maxMU*100)):3;
+      var pkTxt=c&&c.unit!=='Unid.'?` <span style="color:#bbb;">(${c.qty.toLocaleString('es-AR')} pk)</span>`:'';
+      html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><div style="flex:1;background:rgba(0,0,0,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="height:100%;width:${w}%;background:${color};border-radius:3px;"></div></div><span style="width:110px;text-align:right;font-size:10px;color:#888;flex-shrink:0;">${u.toLocaleString('es-AR')} u${pkTxt}</span></div>`;
+    });
+    html+='</div>';
+  });
   html+='</div>';
   el.innerHTML=html;
 }
