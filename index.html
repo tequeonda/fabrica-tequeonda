@@ -72,6 +72,10 @@ input:focus,select:focus{border-color:var(--green);}
 
 
 .cat-block-total{color:#1a6b1a;}
+.cat-block summary{list-style:none;}
+.cat-block summary::-webkit-details-marker{display:none;}
+.cat-block summary::after{content:'▾';font-size:11px;color:var(--muted);margin-left:6px;}
+.cat-block[open] summary::after{content:'▴';}
 .cons-table{width:100%;border-collapse:collapse;}
 .cons-table th{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:var(--muted);padding:5px 6px;text-align:center;font-weight:400;}
 .cons-table th:first-child{text-align:left;width:44%;}
@@ -552,6 +556,23 @@ function getMonthKey(fecha){return fecha.slice(0,7);}
 function monthLabel(key){var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];var p=key.split('-');return meses[parseInt(p[1])-1]+' '+p[0];}
 function prevMonthKey(key){var p=key.split('-');var y=parseInt(p[0]),m=parseInt(p[1])-1;if(m<1){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
 function daysInMonth(key){var p=key.split('-');return new Date(parseInt(p[0]),parseInt(p[1]),0).getDate();}
+function fmtDShort(d){var p=d.split('-');return p[2]+'/'+p[1];}
+function dayCatStats(mk){
+  var reps=getReps().filter(r=>(r.tipo==='produccion'||r.tipo==='ambos')&&r.produccion&&r.produccion.length&&getMonthKey(r.fecha)===mk);
+  var days=reps.map(r=>{
+    var byCat={};
+    r.produccion.forEach(x=>{
+      var ci=codInfo(x.cod);
+      if(!byCat[ci.cat])byCat[ci.cat]={u:0,pk:ci.undsXpack?0:null};
+      var piezas=ci.undsXpack?x.qty*ci.undsXpack:x.qty;
+      byCat[ci.cat].u+=piezas;
+      if(ci.undsXpack)byCat[ci.cat].pk+=x.qty;
+    });
+    return{fecha:r.fecha,byCat};
+  });
+  days.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  return days;
+}
 function pctDelta(a,b){if(!a)return b>0?'+100%':'0%';var d=(b-a)/a*100;return(d>=0?'+':'')+d.toFixed(0)+'%';}
 
 function getMesesConDatos(){
@@ -602,19 +623,68 @@ function renderDirStats(){
   }
   if(cur.topGlobal){var ciTop=codInfo(cur.topGlobal.cod);html+=`<div style="background:var(--ink);border-radius:11px;padding:13px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">⭐ Producto estrella del mes</div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:1px;">${ciTop.cod} — ${ciTop.nombre}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);">${cur.topGlobal.piezas.toLocaleString('es-AR')}<span style="font-size:11px;color:#999;"> u</span></div></div>`;}
   html+='<h2 class="st">PRODUCCIÓN POR CATEGORÍA</h2>';
-  CATS.forEach(cat=>{
-    var c=cur.porCat[cat];if(!c)return;
-    var p=prev&&prev.porCat[cat];var col=CAT_HEX[cat]||{c:'#FFC72C',bg:'#fffdf5'};var topInfo=c.top?codInfo(c.top.cod):null;
-    var pctMix=((c.piezas/cur.totalPiezas)*100).toFixed(0);
-    html+=`<div class="cat-block ${CAT_CLASS[cat]}" style="padding:12px 14px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;">${CAT_ICONS[cat]} ${cat}</span>
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:${col.c};">${pctMix}% del total</span>
+  var catKeys=CATS.filter(cat=>cur.porCat[cat]);
+  var cum=0;
+  var stops=catKeys.map(cat=>{var c=cur.porCat[cat];var pct=c.piezas/cur.totalPiezas*100;var s=cum;cum+=pct;var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';return `${color} ${s.toFixed(2)}% ${cum.toFixed(2)}%`;}).join(', ');
+  html+=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px;">
+    <div style="width:104px;height:104px;border-radius:50%;background:conic-gradient(${stops});position:relative;flex-shrink:0;">
+      <div style="position:absolute;inset:15px;background:var(--card);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:8px;color:var(--muted);letter-spacing:1px;">TOTAL</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--ink);">${cur.totalPiezas.toLocaleString('es-AR')}</div>
       </div>
-      <div style="font-size:14px;color:#222;margin-bottom:3px;">${c.qty.toLocaleString('es-AR')} ${c.unit}${c.unit!=='Unid.'?` <span style="color:#888;font-size:12px;">(${c.piezas.toLocaleString('es-AR')} u)</span>`:''}${p?` <span style="color:${c.piezas>=p.piezas?'#1a8a3a':'#c0392b'};font-size:12px;">${pctDelta(p.piezas,c.piezas)}</span>`:''}</div>
-      ${topInfo?`<div style="font-size:12px;color:var(--muted);">Más producido: <b style="color:#222;">${topInfo.cod} ${topInfo.nombre}</b> — ${c.top.qty} ${c.unit}</div>`:''}
-    </div>`;
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+      ${catKeys.map(cat=>{var c=cur.porCat[cat];var pct=(c.piezas/cur.totalPiezas*100).toFixed(0);var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';return `<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#444;"><span style="width:9px;height:9px;border-radius:3px;background:${color};flex-shrink:0;"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${CAT_ICONS[cat]} ${cat}</span><span style="margin-left:auto;font-family:'Bebas Neue',sans-serif;color:#222;flex-shrink:0;">${pct}%</span></div>`;}).join('')}
+    </div>
+  </div>`;
+  catKeys.forEach((cat,ci)=>{
+    var c=cur.porCat[cat];
+    var p=prev&&prev.porCat[cat];var col=CAT_HEX[cat]||{c:'#FFC72C',bg:'#fffdf5'};
+    var pctMix=((c.piezas/cur.totalPiezas)*100).toFixed(0);
+    var itemsSorted=Object.entries(c.items).sort((a,b)=>b[1]-a[1]);
+    var rows=itemsSorted.map(([cod,qty])=>{
+      var cdi=codInfo(cod);var pz=cdi.undsXpack?qty*cdi.undsXpack:qty;var pctCat=((pz/c.piezas)*100).toFixed(0);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);"><div style="display:flex;align-items:center;gap:7px;min-width:0;"><span style="font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;color:#111;background:#eceae3;padding:1px 7px;border-radius:5px;flex-shrink:0;">${cod}</span><span style="font-size:12px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${cdi.nombre}</span></div><div style="text-align:right;white-space:nowrap;flex-shrink:0;"><span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#111;">${qty}</span><span style="font-size:10px;color:#999;"> ${cdi.unit}${cdi.undsXpack?` (${pz.toLocaleString('es-AR')} u)`:''}</span><span style="font-size:10px;color:#bbb;"> · ${pctCat}%</span></div></div>`;
+    }).join('');
+    html+=`<details class="cat-block ${CAT_CLASS[cat]}" style="padding:0;"${ci===0?' open':''}>
+      <summary style="cursor:pointer;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;">${CAT_ICONS[cat]} ${cat}</span>
+        <span style="display:flex;align-items:center;gap:9px;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:${col.c};">${pctMix}%</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--ink);">${c.qty.toLocaleString('es-AR')} ${c.unit}</span>
+        </span>
+      </summary>
+      <div style="padding:0 14px 12px;">
+        <div style="height:6px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:${pctMix}%;background:${col.c};"></div></div>
+        ${c.unit!=='Unid.'?`<div style="font-size:11px;color:#888;margin-bottom:6px;">= ${c.piezas.toLocaleString('es-AR')} unidades reales${p?` · <span style="color:${c.piezas>=p.piezas?'#1a8a3a':'#c0392b'};">${pctDelta(p.piezas,c.piezas)} vs ${monthLabel(pmk)}</span>`:''}</div>`:(p?`<div style="font-size:11px;color:${c.piezas>=p.piezas?'#1a8a3a':'#c0392b'};margin-bottom:6px;">${pctDelta(p.piezas,c.piezas)} vs ${monthLabel(pmk)}</div>`:'')}
+        ${rows}
+      </div>
+    </details>`;
   });
+  html+='<h2 class="st">PRODUCCIÓN DIARIA POR CATEGORÍA</h2>';
+  var days=dayCatStats(mk);
+  if(!days.length){html+='<div class="empty">Sin días cargados este mes.</div>';}
+  else{
+    var maxU=0;days.forEach(d=>catKeys.forEach(cat=>{if(d.byCat[cat])maxU=Math.max(maxU,d.byCat[cat].u);}));
+    html+=`<div style="display:flex;gap:14px;margin-bottom:10px;font-size:11px;color:var(--muted);flex-wrap:wrap;">${catKeys.map(cat=>{var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';return `<span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:2px;background:${color};"></span>${cat}</span>`;}).join('')}</div>`;
+    html+='<div class="panel" style="padding:12px 14px;">';
+    days.forEach(d=>{
+      var tot=catKeys.reduce((s,cat)=>s+(d.byCat[cat]?d.byCat[cat].u:0),0);
+      html+=`<div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:var(--ink);">${fmtDShort(d.fecha)}</span>
+          <span style="font-size:11px;color:var(--muted);">${tot.toLocaleString('es-AR')} u totales</span>
+        </div>`;
+      catKeys.forEach(cat=>{
+        var c=d.byCat[cat];var color=(CAT_HEX[cat]&&CAT_HEX[cat].c)||'#FFC72C';
+        var u=c?c.u:0;var w=maxU?Math.max(3,Math.round(u/maxU*100)):3;
+        var pkTxt=c&&c.pk!=null?` <span style="color:#bbb;">(${c.pk} pk)</span>`:'';
+        html+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><div style="flex:1;background:rgba(0,0,0,.06);border-radius:3px;height:7px;overflow:hidden;"><div style="height:100%;width:${w}%;background:${color};border-radius:3px;"></div></div><span style="width:100px;text-align:right;font-size:10px;color:#888;flex-shrink:0;">${u.toLocaleString('es-AR')} u${pkTxt}</span></div>`;
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  }
   html+='<h2 class="st">EVOLUCIÓN ÚLTIMOS MESES</h2><div class="panel" style="padding:12px 14px;">';
   var last6=keys.slice(0,6).reverse();var maxTot=Math.max(...last6.map(k=>monthStats(k).totalPiezas),1);
   last6.forEach(k=>{var t=monthStats(k).totalPiezas;html+=`<div class="trend-row"><div class="trend-date">${monthLabel(k)}</div><div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.max(4,Math.round(t/maxTot*100))}%;${k===mk?'background:var(--gold-d);':''}"></div></div><div class="trend-val" style="${k===mk?'color:var(--gold-d);':''}">${t.toLocaleString('es-AR')}</div></div>`;});
