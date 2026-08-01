@@ -213,6 +213,10 @@ input:focus,select:focus{border-color:var(--green);}
           </select>
         </div>
       </div>
+      <div class="row2" style="margin-top:9px;">
+        <div class="fg"><label>Personal en planta</label><input type="number" id="ePersonal" placeholder="Ej: 4" min="0"></div>
+        <div class="fg"><label>Horas trabajadas</label><input type="number" id="eHoras" placeholder="Ej: 8" min="0" step="0.5"></div>
+      </div>
     </div>
     <div id="secProd">
       <h2 class="st">PRODUCCIÓN</h2>
@@ -317,10 +321,9 @@ input:focus,select:focus{border-color:var(--green);}
   </div>
 
   <div class="subtab-content" id="dir-stats">
-    <div class="period-row">
-      <button class="btn-sm active" data-p="semana" onclick="setPer(this,'semana')">Semana</button>
-      <button class="btn-sm" data-p="mes" onclick="setPer(this,'mes')">Mes</button>
-      <button class="btn-sm" data-p="todo" onclick="setPer(this,'todo')">Todo</button>
+    <div class="fg" style="margin-bottom:14px;">
+      <label>Mes a analizar</label>
+      <select id="statMes" onchange="renderDirStats()"></select>
     </div>
     <div id="dirStats"></div>
   </div>
@@ -364,7 +367,7 @@ var DEFAULT_CODIGOS = [
   {cod:'LECHE',nombre:'Leches',                  cat:'POSTRES',       unit:'Unid.', undsXpack:0},
   {cod:'CACH', nombre:'Cachitos',                cat:'CACHITOS',      unit:'Unid.', undsXpack:0},
 ];
-var rowCount=0, curPer='semana', curProdPer='semana';
+var rowCount=0, curProdPer='semana';
 
 function getCods(){try{return JSON.parse(localStorage.getItem('to_cods_v3')||'null')||DEFAULT_CODIGOS;}catch(e){return DEFAULT_CODIGOS;}}
 function saveCods(c){localStorage.setItem('to_cods_v3',JSON.stringify(c));}
@@ -417,7 +420,16 @@ function confirmSave(expectedCount,done){
   document.head.appendChild(script);
 }
 
-function setMode(m){document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===(m==='encargado'?0:1)));document.getElementById('sc-encargado').classList.toggle('active',m==='encargado');document.getElementById('sc-director').classList.toggle('active',m==='director');if(m==='director')loadFromCloud();}
+var DIRECTOR_PIN='2026'; // cambiá este PIN cuando quieras
+function setMode(m){
+  if(m==='director'&&sessionStorage.getItem('to_dir_ok')!=='1'){
+    var pin=prompt('PIN de Director:');
+    if(pin===null)return;
+    if(pin!==DIRECTOR_PIN){alert('PIN incorrecto.');return;}
+    sessionStorage.setItem('to_dir_ok','1');
+  }
+  document.querySelectorAll('.mode-btn').forEach((b,i)=>b.classList.toggle('active',i===(m==='encargado'?0:1)));document.getElementById('sc-encargado').classList.toggle('active',m==='encargado');document.getElementById('sc-director').classList.toggle('active',m==='director');if(m==='director')loadFromCloud();
+}
 function setTab(prefix,id){
   var screenId=prefix==='enc'?'sc-encargado':'sc-director';var screen=document.getElementById(screenId);if(!screen)return;
   screen.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));screen.querySelectorAll('.subtab-content').forEach(c=>c.classList.remove('active'));
@@ -439,7 +451,7 @@ function updHint(id){var row=document.getElementById('row_'+id);if(!row)return;v
 function initCarga(){if(!document.getElementById('eFecha').value)document.getElementById('eFecha').value=today();onTipoChange();if(!document.getElementById('prodRows').children.length)addRow('prodRows');}
 function onTipoChange(){var t=document.getElementById('eTipo').value;document.getElementById('secProd').style.display=(t==='produccion'||t==='ambos')?'block':'none';document.getElementById('secInv').style.display=(t==='inventario'||t==='ambos')?'block':'none';if(t==='inventario'||t==='ambos'){for(var f=1;f<=3;f++){var el=document.getElementById('inv'+f+'Rows');if(el&&!el.children.length)addRow('inv'+f+'Rows');}}}
 function getRows(cid){var rows=[];document.getElementById(cid).querySelectorAll('.freezer-row').forEach(row=>{var cod=row.querySelector('.prod-sel').value;var qty=parseInt(row.querySelector('.qty-big').value)||0;var unit=row.querySelector('.unit-sm').value;if(cod&&qty>0)rows.push({cod,qty,unit});});return rows;}
-function guardar(){var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}var tipo=document.getElementById('eTipo').value;var rep={fecha,tipo,ts:new Date().toISOString()};if(tipo==='produccion'||tipo==='ambos')rep.produccion=getRows('prodRows');if(tipo==='inventario'||tipo==='ambos')rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};var btn=document.getElementById('btnGuardar');var reps=getReps();var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}else reps.unshift(rep);
+function guardar(){var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}var tipo=document.getElementById('eTipo').value;var rep={fecha,tipo,ts:new Date().toISOString()};var personal=parseFloat(document.getElementById('ePersonal').value)||0;var horas=parseFloat(document.getElementById('eHoras').value)||0;if(personal>0&&horas>0){rep.personal=personal;rep.horas=horas;}if(tipo==='produccion'||tipo==='ambos')rep.produccion=getRows('prodRows');if(tipo==='inventario'||tipo==='ambos')rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};var btn=document.getElementById('btnGuardar');var reps=getReps();var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}else reps.unshift(rep);
   document.getElementById('saveMsg').style.display='none';document.getElementById('errMsg').style.display='none';
   btn.disabled=true;btn.textContent='Guardando en la nube...';
   saveToCloud(reps,function(ok){
@@ -536,18 +548,78 @@ function renderDirAlertas(){
   el.innerHTML=alertas.map(a=>`<div class="alert-card ${a.tipo}"><div style="font-size:20px;">${a.tipo==='red'?'🔴':a.tipo==='orange'?'🟠':'🟢'}</div><div><div class="alert-title">${a.title}</div><div class="alert-desc">${a.desc}</div></div></div>`).join('');
 }
 
-function setPer(btn,p){document.querySelectorAll('[data-p]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');curPer=p;renderDirStats();}
+function getMonthKey(fecha){return fecha.slice(0,7);}
+function monthLabel(key){var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];var p=key.split('-');return meses[parseInt(p[1])-1]+' '+p[0];}
+function prevMonthKey(key){var p=key.split('-');var y=parseInt(p[0]),m=parseInt(p[1])-1;if(m<1){m=12;y--;}return y+'-'+String(m).padStart(2,'0');}
+function daysInMonth(key){var p=key.split('-');return new Date(parseInt(p[0]),parseInt(p[1]),0).getDate();}
+function pctDelta(a,b){if(!a)return b>0?'+100%':'0%';var d=(b-a)/a*100;return(d>=0?'+':'')+d.toFixed(0)+'%';}
+
+function getMesesConDatos(){
+  var reps=getReps().filter(r=>(r.tipo==='produccion'||r.tipo==='ambos')&&r.produccion&&r.produccion.length);
+  return[...new Set(reps.map(r=>getMonthKey(r.fecha)))].sort((a,b)=>b.localeCompare(a));
+}
+function monthStats(mk){
+  var reps=getReps().filter(r=>(r.tipo==='produccion'||r.tipo==='ambos')&&r.produccion&&r.produccion.length&&getMonthKey(r.fecha)===mk);
+  var porCod={},dias=0,hhTotal=0,diasConHH=0;
+  reps.forEach(r=>{
+    dias++;
+    r.produccion.forEach(x=>{porCod[x.cod]=(porCod[x.cod]||0)+x.qty;});
+    if(r.personal&&r.horas){hhTotal+=r.personal*r.horas;diasConHH++;}
+  });
+  var porCat={},totalPiezas=0,allItems=[];
+  Object.entries(porCod).forEach(([cod,qty])=>{
+    var ci=codInfo(cod);var piezas=ci.undsXpack?qty*ci.undsXpack:qty;
+    totalPiezas+=piezas;allItems.push({cod,qty,piezas});
+    if(!porCat[ci.cat])porCat[ci.cat]={qty:0,unit:ci.unit,piezas:0,items:{}};
+    porCat[ci.cat].qty+=qty;porCat[ci.cat].piezas+=piezas;porCat[ci.cat].items[cod]=qty;
+  });
+  Object.keys(porCat).forEach(cat=>{var top=Object.entries(porCat[cat].items).sort((a,b)=>b[1]-a[1])[0];porCat[cat].top=top?{cod:top[0],qty:top[1]}:null;});
+  allItems.sort((a,b)=>b.piezas-a.piezas);
+  return{porCat,totalPiezas,dias,hhTotal,diasConHH,piezasPorHH:hhTotal>0?totalPiezas/hhTotal:null,topGlobal:allItems[0]||null};
+}
+function initStatMes(){
+  var keys=getMesesConDatos();var sel=document.getElementById('statMes');var prev=sel.value;
+  sel.innerHTML=keys.map(k=>`<option value="${k}">${monthLabel(k)}</option>`).join('');
+  if(prev&&keys.includes(prev))sel.value=prev;
+  return keys;
+}
 function renderDirStats(){
-  var {agg,nDias,reps}=getProdFiltered(curPer);var el=document.getElementById('dirStats');
-  if(!reps.length){el.innerHTML='<div class="empty">Sin producción en este período.</div>';return;}
-  var sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]);var maxVal=sorted[0]?sorted[0][1]:1;var total=sorted.reduce((s,[,v])=>s+v,0)||1;var totalUnids=sorted.reduce((s,[,v])=>s+v,0);
-  var html=`<div class="kpi-grid"><div class="kpi"><div class="kpi-val">${nDias}</div><div class="kpi-lbl">Días producidos</div></div><div class="kpi"><div class="kpi-val">${totalUnids}</div><div class="kpi-lbl">Total producido</div></div></div>`;
-  html+='<h2 class="st">RANKING ROTACIÓN</h2><div class="panel" style="padding:14px 12px;">';
-  sorted.forEach(([cod,qty])=>{var ci=codInfo(cod);var bw=Math.max(4,Math.round(qty/maxVal*100));var pct=Math.round(qty/total*100);var avg=(qty/nDias).toFixed(1);var tag=pct>=25?'tag-high':pct>=10?'tag-med':'tag-low';var label=pct>=25?'ALTA':pct>=10?'MEDIA':'BAJA';var color=pct>=25?'#00a82d':pct>=10?'#FFC72C':'#e23b3b';html+=`<div class="rot-bar"><div class="rot-info"><span class="cod">${cod}</span><span class="rot-name">${ci.nombre}</span></div><div class="rot-wrap"><div class="rot-fill" style="width:${bw}%;background:${color};"></div></div><div class="rot-val">${qty}</div><span class="rot-tag ${tag}">${label}</span></div><div style="font-size:11px;color:var(--muted);text-align:right;margin:-3px 0 6px;">${pct}% · prom ${avg}/día</div>`;});
-  html+='</div><h2 class="st">TENDENCIA DIARIA</h2><div class="panel" style="padding:12px 14px;">';
-  var byDate={};reps.forEach(r=>{byDate[r.fecha]=(r.produccion||[]).reduce((s,x)=>s+x.qty,0);});var maxDay=Math.max(...Object.values(byDate),1);
-  Object.entries(byDate).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,14).forEach(([fecha,tot])=>{html+=`<div class="trend-row"><div class="trend-date">${fmtD(fecha)}</div><div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.max(4,Math.round(tot/maxDay*100))}%"></div></div><div class="trend-val">${tot}</div></div>`;});
-  html+='</div>';el.innerHTML=html;
+  var keys=initStatMes();var el=document.getElementById('dirStats');
+  if(!keys.length){el.innerHTML='<div class="empty">Sin producción registrada aún.</div>';return;}
+  var mk=document.getElementById('statMes').value||keys[0];
+  var cur=monthStats(mk);var pmk=prevMonthKey(mk);var prev=keys.includes(pmk)?monthStats(pmk):null;
+  var html='<div class="kpi-grid">';
+  html+=`<div class="kpi"><div class="kpi-val">${cur.totalPiezas.toLocaleString('es-AR')}</div><div class="kpi-lbl">Piezas totales</div>${prev?`<div class="kpi-sub" style="color:${cur.totalPiezas>=prev.totalPiezas?'var(--green-br)':'#ff8080'};">${pctDelta(prev.totalPiezas,cur.totalPiezas)} vs ${monthLabel(pmk)}</div>`:'<div class="kpi-sub">Sin mes anterior para comparar</div>'}</div>`;
+  html+=`<div class="kpi"><div class="kpi-val">${cur.dias}<span style="font-size:16px;color:#999;"> / ${daysInMonth(mk)}</span></div><div class="kpi-lbl">Días producidos</div><div class="kpi-sub">${(cur.totalPiezas/(cur.dias||1)).toFixed(0)} u/día prom</div></div>`;
+  html+='</div>';
+  if(cur.hhTotal>0){
+    html+='<div class="kpi-grid">';
+    html+=`<div class="kpi"><div class="kpi-val">${cur.hhTotal.toFixed(0)}</div><div class="kpi-lbl">Horas-hombre</div><div class="kpi-sub">${cur.diasConHH} día${cur.diasConHH!==1?'s':''} con dato cargado</div></div>`;
+    html+=`<div class="kpi"><div class="kpi-val">${cur.piezasPorHH.toFixed(1)}</div><div class="kpi-lbl">Piezas por HH</div>${prev&&prev.piezasPorHH?`<div class="kpi-sub" style="color:${cur.piezasPorHH>=prev.piezasPorHH?'var(--green-br)':'#ff8080'};">${pctDelta(prev.piezasPorHH,cur.piezasPorHH)} vs mes ant.</div>`:''}</div>`;
+    html+='</div>';
+  }else{
+    html+='<div style="font-size:13px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-bottom:16px;">Sin personal/horas cargados este mes en CARGAR — no se puede calcular productividad por hora-hombre.</div>';
+  }
+  if(cur.topGlobal){var ciTop=codInfo(cur.topGlobal.cod);html+=`<div style="background:var(--ink);border-radius:11px;padding:13px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">⭐ Producto estrella del mes</div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:1px;">${ciTop.cod} — ${ciTop.nombre}</div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);">${cur.topGlobal.piezas.toLocaleString('es-AR')}<span style="font-size:11px;color:#999;"> u</span></div></div>`;}
+  html+='<h2 class="st">PRODUCCIÓN POR CATEGORÍA</h2>';
+  CATS.forEach(cat=>{
+    var c=cur.porCat[cat];if(!c)return;
+    var p=prev&&prev.porCat[cat];var col=CAT_HEX[cat]||{c:'#FFC72C',bg:'#fffdf5'};var topInfo=c.top?codInfo(c.top.cod):null;
+    var pctMix=((c.piezas/cur.totalPiezas)*100).toFixed(0);
+    html+=`<div class="cat-block ${CAT_CLASS[cat]}" style="padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;">${CAT_ICONS[cat]} ${cat}</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:${col.c};">${pctMix}% del total</span>
+      </div>
+      <div style="font-size:14px;color:#222;margin-bottom:3px;">${c.qty.toLocaleString('es-AR')} ${c.unit}${c.unit!=='Unid.'?` <span style="color:#888;font-size:12px;">(${c.piezas.toLocaleString('es-AR')} u)</span>`:''}${p?` <span style="color:${c.piezas>=p.piezas?'#1a8a3a':'#c0392b'};font-size:12px;">${pctDelta(p.piezas,c.piezas)}</span>`:''}</div>
+      ${topInfo?`<div style="font-size:12px;color:var(--muted);">Más producido: <b style="color:#222;">${topInfo.cod} ${topInfo.nombre}</b> — ${c.top.qty} ${c.unit}</div>`:''}
+    </div>`;
+  });
+  html+='<h2 class="st">EVOLUCIÓN ÚLTIMOS MESES</h2><div class="panel" style="padding:12px 14px;">';
+  var last6=keys.slice(0,6).reverse();var maxTot=Math.max(...last6.map(k=>monthStats(k).totalPiezas),1);
+  last6.forEach(k=>{var t=monthStats(k).totalPiezas;html+=`<div class="trend-row"><div class="trend-date">${monthLabel(k)}</div><div class="trend-bar-wrap"><div class="trend-bar-fill" style="width:${Math.max(4,Math.round(t/maxTot*100))}%;${k===mk?'background:var(--gold-d);':''}"></div></div><div class="trend-val" style="${k===mk?'color:var(--gold-d);':''}">${t.toLocaleString('es-AR')}</div></div>`;});
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 initCarga();
