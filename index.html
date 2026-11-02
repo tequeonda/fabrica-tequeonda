@@ -312,6 +312,15 @@ input:focus,select:focus{border-color:var(--green);}
     <div style="font-size:12px;color:var(--muted);text-align:right;margin:6px 0 18px;">Último inventario: <span id="dirUltimo">—</span></div>
     <h2 class="st">DETALLE POR FREEZER</h2>
     <div id="dirFreezers"></div>
+    <h2 class="st">RESPALDO DE REPORTES</h2>
+    <div class="panel" style="padding:12px 14px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Descargá una copia de todos los reportes, o restaurá una copia anterior. Restaurar no pisa datos más nuevos y sube todo a la nube.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-sm" onclick="descargarRespaldo()">⬇ Descargar respaldo</button>
+        <button class="btn-sm" onclick="document.getElementById('fileRespaldo').click()">⬆ Restaurar respaldo</button>
+        <input type="file" id="fileRespaldo" accept=".json,application/json" style="display:none" onchange="restaurarRespaldo(this)">
+      </div>
+    </div>
   </div>
 
   <div class="subtab-content" id="dir-prod">
@@ -497,6 +506,31 @@ function runUpload(){
   var p=getPend();getReps().forEach(function(r){var k=repKey(r);if(p.indexOf(k)<0)p.push(k);});
   lsSet('to_pend_v1',p);localStorage.setItem('to_migr_v4','1');
 })();
+
+function descargarRespaldo(){
+  var b=new Blob([JSON.stringify(getReps())],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='respaldo-produccion-'+today()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+function restaurarRespaldo(inp){
+  var f=inp.files&&inp.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var a;
+    try{a=JSON.parse(rd.result);}catch(e){alert('El archivo no es un respaldo válido.');inp.value='';return;}
+    if(!Array.isArray(a)||a.some(function(r){return !r||!r.fecha||!r.tipo;})){alert('El archivo no tiene el formato de reportes esperado.');inp.value='';return;}
+    var m={};getReps().forEach(function(r){m[repKey(r)]=r;});
+    a.forEach(function(r){var k=repKey(r);if(!m[k]||(r.ts||'')>(m[k].ts||''))m[k]=r;});
+    var all=Object.keys(m).map(function(k){return m[k];});
+    saveRepsLocal(all);all.forEach(function(r){addPend(repKey(r));});refreshDir();
+    uploadPending(function(ok){
+      alert(ok?('✓ Se restauraron '+all.length+' reportes y se subieron a la nube.'):('Se restauraron '+all.length+' reportes en este dispositivo, pero NO se pudieron subir todavía. Quedan pendientes y se reintentan solos.'));
+      refreshDir();
+    });
+    inp.value='';
+  };
+  rd.readAsText(f);
+}
 
 var DIRECTOR_PIN='2026'; // cambiá este PIN cuando quieras
 function setMode(m){
