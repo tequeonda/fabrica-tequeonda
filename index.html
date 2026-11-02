@@ -394,43 +394,109 @@ function setSyncOk(t){['syncDot','syncDotDir'].forEach(id=>{var d=document.getEl
 function setSyncErr(t){['syncDot','syncDotDir'].forEach(id=>{var d=document.getElementById(id);if(d){d.style.background='var(--red)';d.classList.remove('pulsing');}});['syncTxt','syncTxtDir'].forEach(id=>{var d=document.getElementById(id);if(d)d.textContent=t;});}
 function setSyncLoading(){['syncDot','syncDotDir'].forEach(id=>{var d=document.getElementById(id);if(d){d.style.background='var(--orange)';d.classList.add('pulsing');}});['syncTxt','syncTxtDir'].forEach(id=>{var d=document.getElementById(id);if(d)d.textContent='Sincronizando...';});}
 
-function loadFromCloud(){
-  setSyncLoading();var cb='cb_'+Date.now();
-  window[cb]=function(data){delete window[cb];var s=document.getElementById('jsonp-script');if(s)s.remove();if(data&&data.reportes&&Array.isArray(data.reportes))saveRepsLocal(data.reportes);var now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});setSyncOk('Actualizado '+now);refreshDir();};
-  var script=document.createElement('script');script.id='jsonp-script';script.src=API+'?callback='+cb+'&t='+Date.now();script.onerror=function(){delete window[cb];setSyncErr('Sin conexión — datos locales');};document.head.appendChild(script);
+// ===== SINCRONIZACIÓN v2: cola de pendientes + merge + verificación por reporte =====
+// La nube es la fuente de verdad, EXCEPTO para lo que este dispositivo todavía no subió (pendientes):
+// eso nunca se pisa ni se pierde, y se reintenta solo hasta que la nube lo confirma.
+function repKey(r){return r.fecha+'|'+r.tipo;}
+function lsGet(k){try{var v=JSON.parse(localStorage.getItem(k)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function getPend(){return lsGet('to_pend_v1');}
+function getDel(){return lsGet('to_del_v1');}
+function addPend(k){var p=getPend();if(p.indexOf(k)<0){p.push(k);lsSet('to_pend_v1',p);}lsSet('to_del_v1',getDel().filter(function(x){return x!==k;}));}
+function addDel(k){var d=getDel();if(d.indexOf(k)<0){d.push(k);lsSet('to_del_v1',d);}lsSet('to_pend_v1',getPend().filter(function(x){return x!==k;}));}
+function nPend(){return getPend().length+getDel().length;}
+function nowHM(){return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});}
+function apiOk(){return typeof API==='string'&&API.indexOf('https://')===0;}
+
+function mergeCloud(cloud,local,pend,dels){
+  var map={};
+  cloud.forEach(function(r){map[repKey(r)]=r;});
+  local.forEach(function(r){var k=repKey(r);if(pend.indexOf(k)>=0)map[k]=r;});
+  dels.forEach(function(k){delete map[k];});
+  return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return (b.ts||b.fecha||'').localeCompare(a.ts||a.fecha||'');});
 }
-function saveToCloud(reps,onDone){
-  saveRepsLocal(reps);
-  var finished=false;
-  var expectedCount=reps.length;
-  function done(ok){if(finished)return;finished=true;var now=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});if(ok)setSyncOk('Guardado '+now);else setSyncErr('Guardado local (revisá conexión)');if(onDone)onDone(ok);}
-
-  // POST con text/plain: Apps Script lo lee de e.postData.contents. Sin límite de tamaño.
-  fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(reps)})
-    .then(function(){
-      // no-cors no deja leer la respuesta -> confirmamos leyendo de la nube
-      setTimeout(function(){confirmSave(expectedCount,done);},2000);
-    })
-    .catch(function(){
-      setTimeout(function(){confirmSave(expectedCount,done);},2000);
-    });
-
-  // red de seguridad
-  setTimeout(function(){if(!finished)confirmSave(expectedCount,done);},9000);
+function cloudHas(data,send,dels){
+  if(!data||!Array.isArray(data.reportes))return false;
+  var m={};data.reportes.forEach(function(r){m[repKey(r)]=r;});
+  for(var i=0;i<send.length;i++){var c=m[repKey(send[i])];if(!c||(c.ts||'')<(send[i].ts||''))return false;}
+  for(var j=0;j<dels.length;j++){if(m[dels[j]])return false;}
+  return true;
 }
-
-function confirmSave(expectedCount,done){
-  var cb='conf_'+Date.now();
-  window[cb]=function(data){
-    delete window[cb];var s=document.getElementById('jsonp-conf');if(s)s.remove();
-    var ok=data&&data.reportes&&Array.isArray(data.reportes)&&data.reportes.length>=expectedCount;
-    if(ok&&data.reportes)saveRepsLocal(data.reportes);
-    done(!!ok);
-  };
-  var script=document.createElement('script');script.id='jsonp-conf';script.src=API+'?callback='+cb+'&t='+Date.now();
-  script.onerror=function(){delete window[cb];done(false);};
+function jsonpGet(onData,onErr){
+  if(!apiOk()){onErr();return;}
+  var cb='j_'+Date.now()+'_'+Math.floor(Math.random()*1e6),finished=false,script=document.createElement('script'),timer;
+  function clean(){finished=true;clearTimeout(timer);delete window[cb];if(script.parentNode)script.parentNode.removeChild(script);}
+  window[cb]=function(d){if(finished)return;clean();onData(d);};
+  script.onerror=function(){if(finished)return;clean();onErr();};
+  timer=setTimeout(function(){if(finished)return;clean();onErr();},15000);
+  script.src=API+'?callback='+cb+'&t='+Date.now();
   document.head.appendChild(script);
 }
+
+function loadFromCloud(){
+  setSyncLoading();
+  jsonpGet(function(data){
+    if(!data||!Array.isArray(data.reportes)){setSyncErr('Respuesta inválida de la nube');return;}
+    var local=getReps();
+    // nube vacía pero hay datos locales: se vuelven a subir, jamás se borran
+    if(data.reportes.length===0&&local.length>0){var p=getPend();local.forEach(function(r){var k=repKey(r);if(p.indexOf(k)<0)p.push(k);});lsSet('to_pend_v1',p);}
+    saveRepsLocal(mergeCloud(data.reportes,local,getPend(),getDel()));
+    if(nPend()>0){setSyncErr('⚠ '+nPend()+' reporte(s) sin subir');if(!uploading)uploadPending();}
+    else setSyncOk('Actualizado '+nowHM());
+    refreshDir();
+  },function(){
+    setSyncErr(nPend()>0?('⚠ '+nPend()+' sin subir — sin conexión'):'Sin conexión — datos locales');
+  });
+}
+
+var uploading=false,waiters=[];
+function uploadPending(onDone){
+  if(onDone)waiters.push(onDone);
+  if(uploading)return;
+  runUpload();
+}
+function finishUpload(ok){
+  uploading=false;
+  if(ok&&nPend()>0){runUpload();return;} // llegaron pendientes nuevos mientras subía
+  var w=waiters;waiters=[];
+  if(ok)setSyncOk('Guardado '+nowHM());else setSyncErr('⚠ '+nPend()+' reporte(s) sin subir');
+  w.forEach(function(f){f(ok);});
+}
+function runUpload(){
+  var pend=getPend(),dels=getDel();
+  if(!pend.length&&!dels.length){finishUpload(true);return;}
+  if(!apiOk()){finishUpload(false);return;}
+  uploading=true;
+  var send=getReps().filter(function(r){return pend.indexOf(repKey(r))>=0;});
+  var sentKeys=send.map(repKey);
+  var gone=pend.filter(function(k){return sentKeys.indexOf(k)<0;});
+  if(gone.length)lsSet('to_pend_v1',getPend().filter(function(k){return gone.indexOf(k)<0;}));
+  // no-cors: no se puede leer la respuesta -> se confirma leyendo la nube y buscando CADA reporte enviado
+  fetch(API,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({reportes:send,del:dels})}).catch(function(){});
+  var esperas=[2000,3000,4000,5000],i=0;
+  function verificar(){
+    jsonpGet(function(data){
+      if(cloudHas(data,send,dels)){
+        var curTs={};getReps().forEach(function(r){curTs[repKey(r)]=r.ts;});
+        var okKeys=send.filter(function(r){return curTs[repKey(r)]===r.ts;}).map(repKey);
+        lsSet('to_pend_v1',getPend().filter(function(k){return okKeys.indexOf(k)<0;}));
+        lsSet('to_del_v1',getDel().filter(function(k){return dels.indexOf(k)<0;}));
+        saveRepsLocal(mergeCloud(data.reportes,getReps(),getPend(),getDel()));
+        refreshDir();
+        finishUpload(true);
+      }else next();
+    },next);
+  }
+  function next(){i++;if(i<esperas.length)setTimeout(verificar,esperas[i]);else finishUpload(false);}
+  setTimeout(verificar,esperas[0]);
+}
+
+// Migración única: lo que ya hay en este dispositivo se marca como pendiente para que suba a la nube nueva
+(function(){
+  if(localStorage.getItem('to_migr_v4'))return;
+  var p=getPend();getReps().forEach(function(r){var k=repKey(r);if(p.indexOf(k)<0)p.push(k);});
+  lsSet('to_pend_v1',p);localStorage.setItem('to_migr_v4','1');
+})();
 
 var DIRECTOR_PIN='2026'; // cambiá este PIN cuando quieras
 function setMode(m){
@@ -466,17 +532,17 @@ function getRows(cid){var rows=[];document.getElementById(cid).querySelectorAll(
 function guardar(){var fecha=document.getElementById('eFecha').value;if(!fecha){alert('Seleccioná fecha');return;}var tipo=document.getElementById('eTipo').value;var rep={fecha,tipo,ts:new Date().toISOString()};var personal=parseFloat(document.getElementById('ePersonal').value)||0;var horas=parseFloat(document.getElementById('eHoras').value)||0;if(personal>0&&horas>0){rep.personal=personal;rep.horas=horas;}if(tipo==='produccion'||tipo==='ambos')rep.produccion=getRows('prodRows');if(tipo==='inventario'||tipo==='ambos')rep.inventario={1:getRows('inv1Rows'),2:getRows('inv2Rows'),3:getRows('inv3Rows')};var btn=document.getElementById('btnGuardar');var reps=getReps();var idx=reps.findIndex(r=>r.fecha===fecha&&r.tipo===tipo);if(idx>=0){if(!confirm('Ya existe reporte para '+fmtD(fecha)+'. ¿Reemplazar?'))return;reps[idx]=rep;}else reps.unshift(rep);
   document.getElementById('saveMsg').style.display='none';document.getElementById('errMsg').style.display='none';
   btn.disabled=true;btn.textContent='Guardando en la nube...';
-  saveToCloud(reps,function(ok){
+  saveRepsLocal(reps);addPend(repKey(rep));
+  uploadPending(function(ok){
     btn.disabled=false;btn.textContent='▶ GUARDAR REPORTE';
     var sm=document.getElementById('saveMsg');var em=document.getElementById('errMsg');
     if(ok){sm.textContent='✓ Guardado y sincronizado con la nube';sm.style.display='block';setTimeout(()=>sm.style.display='none',3500);}
-    else{em.innerHTML='⚠ NO se subió a la nube. El dato quedó solo en este teléfono.<br><button onclick="reintentarSubida()" style="margin-top:8px;background:#e23b3b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-family:\'Bebas Neue\';font-size:14px;letter-spacing:1px;cursor:pointer;">↻ REINTENTAR SUBIDA</button>';em.style.display='block';}
+    else{em.innerHTML='⚠ NO se subió a la nube. Quedó guardado en este dispositivo y se reintenta solo cada minuto.<br><button onclick="reintentarSubida()" style="margin-top:8px;background:#e23b3b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-family:\'Bebas Neue\';font-size:14px;letter-spacing:1px;cursor:pointer;">↻ REINTENTAR SUBIDA</button>';em.style.display='block';}
   });
 }
 function reintentarSubida(){
   var em=document.getElementById('errMsg');em.innerHTML='Reintentando...';
-  var reps=getReps();
-  saveToCloud(reps,function(ok){
+  uploadPending(function(ok){
     if(ok){em.style.display='none';var sm=document.getElementById('saveMsg');sm.textContent='✓ Subido a la nube correctamente';sm.style.display='block';setTimeout(()=>sm.style.display='none',3500);}
     else{em.innerHTML='⚠ Sigue sin subir. Verificá la conexión y volvé a intentar.<br><button onclick="reintentarSubida()" style="margin-top:8px;background:#e23b3b;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-family:\'Bebas Neue\';font-size:14px;letter-spacing:1px;cursor:pointer;">↻ REINTENTAR SUBIDA</button>';}
   });
@@ -514,7 +580,7 @@ function descargarPNG(){
 }
 
 function renderHist(){var reps=getReps();var ft=document.getElementById('hFiltro').value;if(ft)reps=reps.filter(r=>r.tipo===ft);var el=document.getElementById('histCards');if(!reps.length){el.innerHTML='<div class="empty">Sin registros.</div>';return;}el.innerHTML=reps.map(r=>{var chips='';if(r.produccion)chips+=r.produccion.map(x=>{var ci=codInfo(x.cod);var u=ci.undsXpack?` (${x.qty*ci.undsXpack}u)`:'';return`<span class="hist-chip">${x.cod} ${x.qty}${u}</span>`;}).join('');if(r.inventario)[1,2,3].forEach(f=>{if(r.inventario[f]&&r.inventario[f].length)chips+=`<span class="hist-chip" style="color:var(--green)">F${f}: ${r.inventario[f].map(x=>x.cod+' '+x.qty).join(', ')}</span>`;});return`<div class="hist-card"><div style="display:flex;justify-content:space-between;"><div><div class="hist-fecha">${fmtD(r.fecha)}</div><div class="hist-tipo">${{produccion:'Producción',inventario:'Inventario',ambos:'Prod+Inv'}[r.tipo]||r.tipo}</div></div><button class="del-btn" onclick="delRep('${r.fecha}','${r.tipo}')">🗑</button></div><div class="hist-chips">${chips}</div></div>`;}).join('');}
-function delRep(fecha,tipo){if(!confirm('¿Eliminar?'))return;var reps=getReps().filter(r=>!(r.fecha===fecha&&r.tipo===tipo));saveToCloud(reps);renderHist();}
+function delRep(fecha,tipo){if(!confirm('¿Eliminar?'))return;var reps=getReps().filter(r=>!(r.fecha===fecha&&r.tipo===tipo));saveRepsLocal(reps);addDel(fecha+'|'+tipo);uploadPending();renderHist();}
 
 function renderLeyenda(){var cods=getCods();var bycat={};cods.forEach(c=>{if(!bycat[c.cat])bycat[c.cat]=[];bycat[c.cat].push(c);});var html='';CATS.forEach(cat=>{if(!bycat[cat])return;html+=`<div class="ley-cat" style="color:${CAT_COLOR[cat]||'var(--green)'}">${CAT_ICONS[cat]||''} ${cat}</div>`;bycat[cat].forEach(c=>{html+=`<div class="cod-row"><span class="cod">${c.cod}</span><div style="flex:1"><div style="font-size:14px;color:#222;">${c.nombre}</div><div style="font-size:11px;color:var(--muted);">${c.unit}${c.undsXpack?' · '+c.undsXpack+' unds/'+c.unit:''}</div></div><button onclick="delCod('${c.cod}')" style="background:none;border:none;color:#bbb;cursor:pointer;font-size:14px;">✕</button></div>`;});});document.getElementById('leyendaPanel').innerHTML=html;}
 function agregarCod(){var cod=document.getElementById('nCod').value.trim().toUpperCase();var nombre=document.getElementById('nNombre').value.trim();if(!cod||!nombre){alert('Completá código y nombre');return;}var cods=getCods();if(cods.find(c=>c.cod===cod)){alert('Ya existe');return;}cods.push({cod,nombre,cat:document.getElementById('nCat').value,unit:document.getElementById('nUnit').value,undsXpack:parseInt(document.getElementById('nUnds').value)||0});saveCods(cods);document.getElementById('nCod').value='';document.getElementById('nNombre').value='';document.getElementById('nUnds').value='';renderLeyenda();}
